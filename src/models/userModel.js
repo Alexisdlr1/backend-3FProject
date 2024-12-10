@@ -4,8 +4,11 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    referenceEmail: { type: String },
-    wallet: { type: String }
+    isAdmin: { type: Boolean },
+    isActive: { type: Boolean },
+    wallet: { type: String },
+    referred_by: { type: String },
+    referrals: [{ type: String}]
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);

@@ -1,13 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
-const testRoutes = require("./routes/testRoutes");
+const whiteListRoutes = require("./routes/whiteListRoutes");
 
 const app = express();
 
 // Middleware de CORS
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://backend-3-f-project.vercel.app"],
+  origin: ["http://localhost:3000"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -24,6 +24,8 @@ app.get("/", (req, res) => {
 
 // Rutas
 app.use("/f3api/users", userRoutes);
+
+app.use("/f3api/whiteList", whiteListRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({ message: "Ruta no encontrada" });

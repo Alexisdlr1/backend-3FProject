@@ -1,5 +1,5 @@
 const express = require("express");
-const { createUser, getAllUsers, loginUser, checkWallet } = require("../controllers/userController");
+const { createUser, getAllUsers, loginUser, checkWallet, updateUser } = require("../controllers/userController");
 
 const router = express.Router();
 
@@ -14,5 +14,8 @@ router.post("/", createUser);
 
 // Ruta para obtener todos los usuarios
 router.get("/", getAllUsers);
+
+// Ruta para actualizar un campo de un usuario por id
+router.put("/:id", updateUser);
 
 module.exports = router;

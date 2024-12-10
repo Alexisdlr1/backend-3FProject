@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 // Obtener todos los usuarios
 const getAllUsers = async (req, res) => {
@@ -16,7 +17,7 @@ const getAllUsers = async (req, res) => {
       const users = await User.find()
           .skip(skip)
           .limit(limit)
-          .select("name email"); // Selecciona solo los campos necesarios (opcional)
+          .select("name email isAdmin isActive");
 
       // Obtener el total de usuarios para la respuesta
       const totalUsers = await User.countDocuments();
@@ -33,7 +34,7 @@ const getAllUsers = async (req, res) => {
       res.status(500).json({ message: "Error al obtener usuarios.", error: error.message });
   }
 };
-  
+
   // Login usuario con JWT
   const loginUser = async (req, res) => {
     console.log("Intentando iniciar sesión...");
@@ -63,7 +64,7 @@ const getAllUsers = async (req, res) => {
       // Generar el token JWT
       console.log("Generando token JWT...");
       const token = jwt.sign(
-        { id: user._id, email: user.email, name: user.name, wallet: user.wallet },
+        { id: user._id, email: user.email, name: user.name, wallet: user.wallet, isAdmin: user.isAdmin, isActive: user.isActive },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
@@ -83,7 +84,7 @@ const getAllUsers = async (req, res) => {
   // Crear un nuevo usuario
   const createUser = async (req, res) => {
       try {
-          const { name, email, password, referenceEmail, wallet } = req.body;
+          const { name, email, password, referenceEmail, wallet, isAdmin, isActive } = req.body;
 
           if (!name || !email || !password) {
               return res.status(400).json({ message: "Faltan datos obligatorios." });
@@ -104,6 +105,8 @@ const getAllUsers = async (req, res) => {
               password: hashedPassword, // Guardar la contraseña encriptada
               referenceEmail,
               wallet,
+              isAdmin,
+              isActive
           });
 
           await user.save();
@@ -136,4 +139,34 @@ const getAllUsers = async (req, res) => {
     }
   };
 
-module.exports = { createUser, getAllUsers, loginUser, checkWallet };
+  const updateUser = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+  
+      if (!id || Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: "ID o datos de actualización faltantes." });
+      }
+  
+      // Validar el formato del ID
+      if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).json({ message: "ID inválido." });
+      }
+  
+      const updatedUser = await User.findByIdAndUpdate(id, updates, {
+        new: true,
+        runValidators: true,
+      });
+  
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Usuario no encontrado." });
+      }
+  
+      res.status(200).json({ message: "Usuario actualizado con éxito.", user: updatedUser });
+    } catch (error) {
+      console.error("Error en updateUser:", error.message);
+      res.status(500).json({ message: "Error al actualizar el usuario.", error: error.message });
+    }
+  };  
+
+module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser };
