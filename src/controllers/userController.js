@@ -80,42 +80,69 @@ const getAllUsers = async (req, res) => {
       res.status(500).json({ message: "Error en el servidor.", error: error.message });
     }
   };  
-
-  // Crear un nuevo usuario
+  
+  // Crear un usuario
   const createUser = async (req, res) => {
-      try {
-          const { name, email, password, referenceEmail, wallet, isAdmin, isActive } = req.body;
+    try {
+        const { name, email, password, referredBy, wallet, isAdmin, isActive } = req.body;
 
-          if (!name || !email || !password) {
-              return res.status(400).json({ message: "Faltan datos obligatorios." });
-          }
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Faltan datos obligatorios." });
+        }
 
-          // Verificar si el email ya existe
-          const existingUser = await User.findOne({ email });
-          if (existingUser) {
-              return res.status(400).json({ message: "El email ya está registrado." });
-          }
+        // Verificar si el email ya existe
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "El email ya está registrado." });
+        }
 
-          // Encriptar la contraseña antes de guardar
-          const hashedPassword = await bcrypt.hash(password, 10);
+        // Verificar si la wallet de referido existe
+        let referrer = null;
+        if (referredBy) {
+            referrer = await User.findOne({ wallet: referredBy });
+            if (!referrer) {
+                return res.status(400).json({ message: "La wallet de referido no está registrada." });
+            }
+        }
 
-          const user = new User({
-              name,
-              email,
-              password: hashedPassword, // Guardar la contraseña encriptada
-              referenceEmail,
-              wallet,
-              isAdmin,
-              isActive
-          });
+        // Encriptar la contraseña antes de guardar
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-          await user.save();
+        // Construir el árbol de referencias (uplineCommissions)
+        const uplineCommissions = [];
+        let currentReferrer = referrer; // Empieza con el referido inmediato
+        for (let i = 0; i < 3; i++) {
+            if (!currentReferrer) break;
+            uplineCommissions.unshift(currentReferrer.wallet); // Agrega el nivel más cercano al inicio del arreglo
+            currentReferrer = await User.findOne({ wallet: currentReferrer.referred_by }); // Busca el siguiente nivel
+        }
 
-          res.status(201).json({ message: "Usuario creado con éxito.", user });
-      } catch (error) {
-          res.status(500).json({ message: "Error al crear usuario.", error: error.message });
-      }
-  };
+        const user = new User({
+            name,
+            email,
+            password: hashedPassword, // Guardar la contraseña encriptada
+            referred_by: referredBy,
+            wallet,
+            isAdmin,
+            isActive,
+            uplineCommisions: uplineCommissions, // Agregar el árbol de referencias
+        });
+
+        // Guardar el nuevo usuario
+        await user.save();
+
+        // Si hay referido, agregar la wallet del nuevo usuario al arreglo de referrals
+        if (referrer) {
+            referrer.referrals.push(wallet);
+            await referrer.save(); // Guardar los cambios del referido
+        }
+
+        res.status(201).json({ message: "Usuario creado con éxito.", user });
+    } catch (error) {
+        console.error("Error al crear usuario:", error.message);
+        res.status(500).json({ message: "Error al crear usuario.", error: error.message });
+    }
+};
 
   // Verificar si una wallet ya existe
   const checkWallet = async (req, res) => {
