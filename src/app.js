@@ -57,7 +57,7 @@ app.post("/f3api/webhook", (req, res) => {
       console.log("Repositorio actualizado. Reiniciando p2...");
 
       // Ejecuta p2 restart para reiniciar el servidor
-      exec("p2 restart", (restartError, restartStdout, restartStderr) => {
+      exec("p2 restart server", (restartError, restartStdout, restartStderr) => {
         if (restartError) {
           console.error(`Error al reiniciar p2: ${restartError.message}`);
           return res.status(500).json({ message: "Error al reiniciar el servidor." });
