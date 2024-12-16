@@ -3,37 +3,58 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
-// Obtener todos los usuarios
-const getAllUsers = async (req, res) => {
-  try {
-      console.log("Iniciando getAllUsers...");
+  // Obtener todos los usuarios
+  const getAllUsers = async (req, res) => {
+    try {
+        console.log("Iniciando getAllUsers...");
 
-      // Parámetros de paginación
-      const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
-      const limit = parseInt(req.query.limit) || 10; // Usuarios por página (por defecto 10)
-      const skip = (page - 1) * limit; // Usuarios a saltar
+        // Parámetros de paginación
+        const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
+        const limit = parseInt(req.query.limit) || 10; // Usuarios por página (por defecto 10)
+        const skip = (page - 1) * limit; // Usuarios a saltar
 
-      // Consultar usuarios con paginación
-      const users = await User.find()
-          .skip(skip)
-          .limit(limit)
-          .select("name email isAdmin isActive");
+        // Consultar usuarios con paginación
+        const users = await User.find()
+            .skip(skip)
+            .limit(limit)
+            .select("name email isAdmin isActive");
 
-      // Obtener el total de usuarios para la respuesta
-      const totalUsers = await User.countDocuments();
+        // Obtener el total de usuarios para la respuesta
+        const totalUsers = await User.countDocuments();
 
-      console.log(`Usuarios encontrados: ${users.length}`);
-      res.status(200).json({
-          total: totalUsers,
-          page,
-          pages: Math.ceil(totalUsers / limit),
-          users,
-      });
-  } catch (error) {
-      console.error("Error en getAllUsers:", error.message);
-      res.status(500).json({ message: "Error al obtener usuarios.", error: error.message });
-  }
-};
+        console.log(`Usuarios encontrados: ${users.length}`);
+        res.status(200).json({
+            total: totalUsers,
+            page,
+            pages: Math.ceil(totalUsers / limit),
+            users,
+        });
+    } catch (error) {
+        console.error("Error en getAllUsers:", error.message);
+        res.status(500).json({ message: "Error al obtener usuarios.", error: error.message });
+    }
+  };
+
+  // Obtener usuario por ID
+  const getUserById = async (req, res) => {
+    try {
+        console.log("Iniciando getUserById...");
+        
+        const userId = req.params.id;
+
+        const user = await User.findById(userId).select("name email isAdmin isActive");
+
+        if (!user) {
+            return res.status(404).json({ message: "Usuario no encontrado." });
+        }
+
+        console.log(`Usuario encontrado: ${user.name}`);
+        res.status(200).json({ user });
+    } catch (error) {
+        console.error("Error en getUserById:", error.message);
+        res.status(500).json({ message: "Error al obtener el usuario.", error: error.message });
+    }
+  };
 
   // Login usuario con JWT
   const loginUser = async (req, res) => {
@@ -64,7 +85,7 @@ const getAllUsers = async (req, res) => {
       // Generar el token JWT
       console.log("Generando token JWT...");
       const token = jwt.sign(
-        { id: user._id, email: user.email, name: user.name, wallet: user.wallet, isAdmin: user.isAdmin, isActive: user.isActive },
+        { id: user._id, email: user.email, name: user.name, wallet: user.wallet, isAdmin: user.isAdmin, isActive: user.isActive, uplineCommissions: user.uplineCommisions },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
@@ -73,7 +94,7 @@ const getAllUsers = async (req, res) => {
       res.status(200).json({
         message: "Inicio de sesión exitoso.",
         token,
-        user: { id: user._id, name: user.name, email: user.email, wallet: user.wallet },
+        user: { id: user._id, name: user.name, email: user.email, wallet: user.wallet, uplineCommissions: user.uplineCommisions},
       });
     } catch (error) {
       console.error("Error en login:", error.message);
@@ -196,4 +217,4 @@ const getAllUsers = async (req, res) => {
     }
   };  
 
-module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser };
+module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById };
