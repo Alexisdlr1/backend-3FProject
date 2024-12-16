@@ -21,7 +21,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.status(200).send("API funcionando correctamente.");
+  res.status(200).send("API funcionando correctamente con actualizacion automatica.");
 });
 
 // Rutas
