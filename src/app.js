@@ -21,7 +21,7 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("PORFIIIIIINNN?????.");
+  res.status(200).send("AHORA SIIIII????.");
 });
 
 // Rutas
