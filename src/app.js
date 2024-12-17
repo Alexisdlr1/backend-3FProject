@@ -46,8 +46,8 @@ app.post("/f3api/webhook", (req, res) => {
       }
       console.log(`stdout: ${stdout}`);
     
-      // Reiniciar el servidor con p2
-      exec("p2 restart server", (restartError, restartStdout, restartStderr) => {
+      // Reiniciar el servidor con pm2
+      exec("pm2 restart server", (restartError, restartStdout, restartStderr) => {
         if (restartError) {
           console.error(`Error al reiniciar p2: ${restartError.message}`);
           return res.status(500).send("Error al reiniciar el servidor.");
