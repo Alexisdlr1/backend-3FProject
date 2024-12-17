@@ -9,7 +9,9 @@ const userSchema = new mongoose.Schema({
     wallet: { type: String },
     referred_by: { type: String },
     referrals: [{ type: String}],
-    uplineCommisions: [{ type: String}]
+    uplineCommisions: [{ type: String}],
+    email_beneficiary: { type: String },
+    name_beneficiary: { type: String }
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
