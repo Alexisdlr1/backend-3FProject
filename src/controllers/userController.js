@@ -85,7 +85,7 @@ const mongoose = require("mongoose");
       // Generar el token JWT
       console.log("Generando token JWT...");
       const token = jwt.sign(
-        { id: user._id, email: user.email, name: user.name, wallet: user.wallet, isAdmin: user.isAdmin, isActive: user.isActive, uplineCommissions: user.uplineCommisions },
+        { id: user._id, email: user.email, name: user.name, wallet: user.wallet, isAdmin: user.isAdmin, isActive: user.isActive, uplineCommissions: user.uplineCommisions, email_beneficiary: user.email_beneficiary, name_beneficiary: user.name_beneficiary },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
@@ -94,7 +94,7 @@ const mongoose = require("mongoose");
       res.status(200).json({
         message: "Inicio de sesión exitoso.",
         token,
-        user: { id: user._id, name: user.name, email: user.email, wallet: user.wallet, uplineCommissions: user.uplineCommisions},
+        user: { id: user._id, name: user.name, email: user.email, wallet: user.wallet, uplineCommissions: user.uplineCommisions, email_beneficiary: user.email_beneficiary, name_beneficiary: user.name_beneficiary },
       });
     } catch (error) {
       console.error("Error en login:", error.message);
