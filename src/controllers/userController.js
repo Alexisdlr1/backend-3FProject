@@ -42,7 +42,7 @@ const mongoose = require("mongoose");
         
         const userId = req.params.id;
 
-        const user = await User.findById(userId).select("name email isAdmin isActive");
+        const user = await User.findById(userId).select("name email isAdmin isActive wallet referrals uplineCommisions");
 
         if (!user) {
             return res.status(404).json({ message: "Usuario no encontrado." });
