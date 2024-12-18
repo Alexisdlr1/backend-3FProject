@@ -65,6 +65,51 @@ app.post("/f3api/webhook", (req, res) => {
   }
 });
 
+const mongoose = require("mongoose");
+
+// Endpoint para health check
+app.get("/f3api/health", async (req, res) => {
+  try {
+    // Verificar conexión con la base de datos
+    const isDatabaseConnected = await checkDatabaseConnection();
+
+    if (isDatabaseConnected) {
+      res.status(200).json({
+        status: "ok",
+        server: "online",
+        database: "connected",
+      });
+    } else {
+      throw new Error("No se pudo conectar a la base de datos");
+    }
+  } catch (error) {
+    console.error("Error en el health check:", error.message);
+    res.status(500).json({
+      status: "error",
+      server: "online",
+      database: "disconnected",
+    });
+  }
+});
+
+// Función para verificar la conexión a la base de datos
+const checkDatabaseConnection = async () => {
+  try {
+    const db = mongoose.connection;
+    if (db.readyState === 1) {
+      await db.db.admin().ping();
+      console.log("Conexión con la base de datos establecida.");
+      return true;
+    } else {
+      console.error("La conexión con la base de datos no está activa.");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error al verificar la conexión a la base de datos:", error.message);
+    return false;
+  }
+};
+
 app.use((req, res, next) => {
   res.status(404).json({ message: "Ruta no encontrada" });
 });
