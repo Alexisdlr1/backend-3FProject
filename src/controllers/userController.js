@@ -60,47 +60,72 @@ const mongoose = require("mongoose");
   const loginUser = async (req, res) => {
     console.log("Intentando iniciar sesión...");
     try {
-      const { email, password } = req.body;
-      console.log("Datos recibidos:", { email });
-  
-      if (!email || !password) {
+      const { email, password, wallet } = req.body;
+      console.log("Datos recibidos:", { email, wallet });
+
+      // Verificar que los campos obligatorios estén presentes
+      if (!email || !password || !wallet) {
         console.log("Faltan datos obligatorios para el login.");
         return res.status(400).json({ message: "Por favor, ingresa todos los campos." });
       }
-  
+
       // Buscar al usuario por email
       const user = await User.findOne({ email });
       if (!user) {
         console.log("Usuario no encontrado.");
         return res.status(401).json({ message: "Credenciales inválidas." });
       }
-  
+
       // Verificar la contraseña
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         console.log("Contraseña incorrecta.");
         return res.status(401).json({ message: "Credenciales inválidas." });
       }
-  
+
+      // Validar que la wallet proporcionada coincida con la registrada en la base de datos
+      if (user.wallet !== wallet) {
+        console.log("La wallet proporcionada no coincide.");
+        return res.status(401).json({ message: "La wallet proporcionada no coincide con la registrada." });
+      }
+
       // Generar el token JWT
       console.log("Generando token JWT...");
       const token = jwt.sign(
-        { id: user._id, email: user.email, name: user.name, wallet: user.wallet, isAdmin: user.isAdmin, isActive: user.isActive, uplineCommissions: user.uplineCommisions, email_beneficiary: user.email_beneficiary, name_beneficiary: user.name_beneficiary },
+        {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          wallet: user.wallet,
+          isAdmin: user.isAdmin,
+          isActive: user.isActive,
+          uplineCommissions: user.uplineCommisions,
+          email_beneficiary: user.email_beneficiary,
+          name_beneficiary: user.name_beneficiary,
+        },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
-  
+
       console.log("Inicio de sesión exitoso.");
       res.status(200).json({
         message: "Inicio de sesión exitoso.",
         token,
-        user: { id: user._id, name: user.name, email: user.email, wallet: user.wallet, uplineCommissions: user.uplineCommisions, email_beneficiary: user.email_beneficiary, name_beneficiary: user.name_beneficiary },
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          wallet: user.wallet,
+          uplineCommissions: user.uplineCommisions,
+          email_beneficiary: user.email_beneficiary,
+          name_beneficiary: user.name_beneficiary,
+        },
       });
     } catch (error) {
       console.error("Error en login:", error.message);
       res.status(500).json({ message: "Error en el servidor.", error: error.message });
     }
-  };  
+  };
   
   // Crear un usuario
   const createUser = async (req, res) => {
