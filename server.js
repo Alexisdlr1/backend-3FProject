@@ -5,7 +5,7 @@ const cors = require("cors"); // Importar cors
 
 // Configuración de CORS
 const corsOptions = {
-  origin: ["http://localhost:3000"],
+  origin: ["http://localhost:3000", "https://3-f-project-nextjs.vercel.app/"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
