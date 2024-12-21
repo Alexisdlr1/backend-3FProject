@@ -6,7 +6,7 @@ const userRoutes = require("./routes/userRoutes");
 const whiteListRoutes = require("./routes/whiteListRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 
-const GITHUB_SECRET = process.env.GITHUB_SECRET || "mySuperSecretKey123!";
+const GITHUB_SECRET = process.env.GITHUB_SECRET || "3FFamily3FFriends3FFreeSecretGithub!";
 
 const app = express();
 
