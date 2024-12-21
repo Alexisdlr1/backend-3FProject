@@ -22,7 +22,7 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("Con esto deberia funcionar?.");
+  res.status(200).send("The backend update on the main branch in production is ready.");
 });
 
 // Rutas
