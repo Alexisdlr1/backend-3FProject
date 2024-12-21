@@ -22,7 +22,7 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("Sincronizacion Lista Para Hacer Merge.");
+  res.status(200).send("HOLAAAAAAAAAAA.");
 });
 
 // Rutas
@@ -36,7 +36,7 @@ app.post("/f3api/webhook", (req, res) => {
   if (req.body.ref === "refs/heads/main") {
     console.log("Webhook recibido: Ejecutando git pull...");
 
-    exec("cd /home/freefriendsandfamily/backend-3FProject && git pull", (error, stdout, stderr) => {
+    exec("cd /home/freefriendsandfamily/backend-3FProject && git pull --no-rebase", (error, stdout, stderr) => {
       if (error) {
         console.error(`Error al ejecutar git pull: ${error.message}`);
         return res.status(500).send("Error al ejecutar git pull");
