@@ -22,7 +22,7 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("The backend update on the main branch in production is ready.");
+  res.status(200).send("THIi.");
 });
 
 // Rutas
@@ -32,7 +32,11 @@ app.use("/f3api/transaction", transactionRoutes);
 
 // Endpoint para recibir el webhook de GitHub
 app.post("/f3api/webhook", (req, res) => {
-  // Verifica si es un push a la rama principal (refs/heads/main)
+  const event = req.headers["x-github-event"];
+  if (event !== "push") {
+    return res.status(400).json({ message: "Evento no soportado." });
+  }
+
   if (req.body.ref === "refs/heads/main") {
     console.log("Webhook recibido: Ejecutando git pull...");
 
@@ -47,10 +51,11 @@ app.post("/f3api/webhook", (req, res) => {
       console.log(`stdout: ${stdout}`);
     
       // Reiniciar el servidor con pm2
-      exec("pm2 restart backend", (restartError, restartStdout, restartStderr) => {
-        if (restartError) {
-          console.error(`Error al reiniciar p2: ${restartError.message}`);
-          return res.status(500).send("Error al reiniciar el servidor.");
+      exec("cd /home/freefriendsandfamily/backend-3FProject && git pull --no-rebase", (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error al ejecutar git pull: ${error.message}`);
+          console.error(`Stack completo: ${error.stack}`);
+          return res.status(500).send(`Error al ejecutar git pull: ${error.message}`);
         }
         if (restartStderr) {
           console.error(`stderr: ${restartStderr}`);
