@@ -22,7 +22,7 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("Last test.");
+  res.status(200).send("HIIIII.");
 });
 
 // Rutas
@@ -50,18 +50,17 @@ app.post("/f3api/webhook", (req, res) => {
       }
       console.log(`stdout: ${stdout}`);
     
-      // Reiniciar el servidor con pm2
-      exec("cd /home/freefriendsandfamily/backend-3FProject && git pull --no-rebase", (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error al ejecutar git pull: ${error.message}`);
-          console.error(`Stack completo: ${error.stack}`);
-          return res.status(500).send(`Error al ejecutar git pull: ${error.message}`);
+      // Reiniciar el servidor con pm2 (con reload)
+      exec("pm2 reload backend", (reloadError, reloadStdout, reloadStderr) => {
+        if (reloadError) {
+          console.error(`Error al recargar el servidor: ${reloadError.message}`);
+          return res.status(500).send("Error al recargar el servidor.");
         }
-        if (restartStderr) {
-          console.error(`stderr: ${restartStderr}`);
+        if (reloadStderr) {
+          console.error(`stderr: ${reloadStderr}`);
         }
-        console.log(`stdout: ${restartStdout}`);
-        res.status(200).send("Repositorio actualizado y servidor reiniciado correctamente.");
+        console.log(`stdout: ${reloadStdout}`);
+        res.status(200).send("Repositorio actualizado y servidor recargado correctamente.");
       });
     });
   } else {
