@@ -22,7 +22,7 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("Working.");
+  res.status(200).send("Preparado con el webhook.");
 });
 
 // Rutas
@@ -47,7 +47,7 @@ app.post("/f3api/webhook", (req, res) => {
       console.log(`stdout: ${stdout}`);
     
       // Reiniciar el servidor con pm2
-      exec("pm2 restart server", (restartError, restartStdout, restartStderr) => {
+      exec("pm2 restart backend", (restartError, restartStdout, restartStderr) => {
         if (restartError) {
           console.error(`Error al reiniciar p2: ${restartError.message}`);
           return res.status(500).send("Error al reiniciar el servidor.");
