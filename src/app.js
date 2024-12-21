@@ -1,9 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const { exec } = require("child_process");
+const crypto = require("crypto");
 const userRoutes = require("./routes/userRoutes");
 const whiteListRoutes = require("./routes/whiteListRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+
+const GITHUB_SECRET = process.env.GITHUB_SECRET || "mySuperSecretKey123!";
 
 const app = express();
 
@@ -32,36 +35,63 @@ app.use("/f3api/transaction", transactionRoutes);
 
 // Endpoint para recibir el webhook de GitHub
 app.post("/f3api/webhook", (req, res) => {
+  // Validar tipo de evento
   const event = req.headers["x-github-event"];
   if (event !== "push") {
     return res.status(400).json({ message: "Evento no soportado." });
   }
 
+  // Validar la firma del webhook
+  const signature = req.headers["x-hub-signature-256"];
+  if (!signature) {
+    console.error("Firma no proporcionada.");
+    return res.status(400).json({ message: "Firma no proporcionada." });
+  }
+
+  // Crear el hash HMAC usando el secreto
+  const payload = JSON.stringify(req.body); // Asegúrate de que el payload esté en formato JSON
+  const hmac = crypto.createHmac("sha256", GITHUB_SECRET);
+  const digest = `sha256=${hmac.update(payload).digest("hex")}`;
+
+  if (signature !== digest) {
+    console.error("Firma inválida. La solicitud no proviene de GitHub.");
+    return res.status(401).json({ message: "Firma inválida. Acceso no autorizado." });
+  }
+
+  console.log("Firma válida. Procesando webhook...");
+
+  // Verificar si es un push a la rama principal
   if (req.body.ref === "refs/heads/main") {
     console.log("Webhook recibido: Ejecutando git pull...");
 
+    // Ejecutar el comando git pull
     exec("cd /home/freefriendsandfamily/backend-3FProject && git pull --no-rebase", (error, stdout, stderr) => {
       if (error) {
         console.error(`Error al ejecutar git pull: ${error.message}`);
-        return res.status(500).send("Error al ejecutar git pull");
+        console.error(`Stack completo: ${error.stack}`);
+        return res.status(500).send(`Error al ejecutar git pull: ${error.message}`);
       }
+
       if (stderr) {
         console.error(`stderr: ${stderr}`);
       }
+
       console.log(`stdout: ${stdout}`);
-    
-      // Reiniciar el servidor con pm2
-      exec("cd /home/freefriendsandfamily/backend-3FProject && git pull --no-rebase", (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error al ejecutar git pull: ${error.message}`);
-          console.error(`Stack completo: ${error.stack}`);
-          return res.status(500).send(`Error al ejecutar git pull: ${error.message}`);
+      console.log("git pull ejecutado con éxito. Procediendo a recargar el servidor con PM2...");
+
+      // Recargar el servidor con PM2
+      exec("pm2 reload backend", (reloadError, reloadStdout, reloadStderr) => {
+        if (reloadError) {
+          console.error(`Error al recargar el servidor: ${reloadError.message}`);
+          return res.status(500).send("Error al recargar el servidor.");
         }
-        if (restartStderr) {
-          console.error(`stderr: ${restartStderr}`);
+
+        if (reloadStderr) {
+          console.error(`stderr: ${reloadStderr}`);
         }
-        console.log(`stdout: ${restartStdout}`);
-        res.status(200).send("Repositorio actualizado y servidor reiniciado correctamente.");
+
+        console.log(`stdout: ${reloadStdout}`);
+        res.status(200).send("Repositorio actualizado y servidor recargado correctamente.");
       });
     });
   } else {
