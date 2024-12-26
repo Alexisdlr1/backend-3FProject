@@ -99,7 +99,7 @@ const mongoose = require("mongoose");
           wallet: user.wallet,
           isAdmin: user.isAdmin,
           isActive: user.isActive,
-          uplineCommissions: user.uplineCommisions,
+          ReferersCommissions: user.uplineCommisions,
           email_beneficiary: user.email_beneficiary,
           name_beneficiary: user.name_beneficiary,
         },
@@ -116,7 +116,7 @@ const mongoose = require("mongoose");
           name: user.name,
           email: user.email,
           wallet: user.wallet,
-          uplineCommissions: user.uplineCommisions,
+          ReferersCommissions: user.uplineCommisions,
           email_beneficiary: user.email_beneficiary,
           name_beneficiary: user.name_beneficiary,
         },
@@ -154,12 +154,12 @@ const mongoose = require("mongoose");
       // Encriptar la contraseña antes de guardar
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Construir el árbol de referencias (uplineCommissions)
-      const uplineCommissions = [];
+      // Construir el árbol de referencias (ReferersCommissions)
+      const ReferersCommissions = [];
       let currentReferrer = referrer; // Empieza con el referido inmediato
       for (let i = 0; i < 3; i++) { // 3 niveles
         if (!currentReferrer) break;
-        uplineCommissions.unshift(currentReferrer.wallet); // Agrega el nivel más cercano al inicio del arreglo
+        ReferersCommissions.unshift(currentReferrer.wallet); // Agrega el nivel más cercano al inicio del arreglo
         currentReferrer = await User.findOne({ wallet: currentReferrer.referred_by }); // Busca el siguiente nivel
       }
 
@@ -171,7 +171,7 @@ const mongoose = require("mongoose");
         wallet,
         isAdmin,
         isActive,
-        uplineCommissions, // Agregar el árbol de referencias
+        ReferersCommissions, // Agregar el árbol de referencias
       });
 
       // Guardar el nuevo usuario
@@ -190,12 +190,9 @@ const mongoose = require("mongoose");
     }
   };
 
-  // Obtener información de los uplineCommissions de un usuario
-  const getUplineCommissions = async (req, res) => {
+  // Obtener informacion de los referidos
+  const getReferersCommissions = async (req, res) => {
     try {
-      console.log("Solicitud recibida en /f3api/users/upline/:wallet");
-      console.log("Parámetros recibidos:", req.params);
-  
       const { wallet } = req.params;
   
       if (!wallet) {
@@ -210,36 +207,55 @@ const mongoose = require("mongoose");
         return res.status(404).json({ message: "Usuario no encontrado." });
       }
   
-      // Construir la lista de uplineCommissions
-      const uplineCommissions = [];
-      let currentWallet = user.referred_by;
+      const ReferersCommissionsResponse = [];
+      const visitedWallets = new Set(); // Para evitar ciclos o duplicados
   
-      console.log(`Generando upline commissions para la wallet: ${wallet}`);
-      for (let i = 0; i < 7; i++) {
-        if (!currentWallet) break;
+      // Inicializar el primer nivel
+      let currentLevel = await User.find({ wallet: { $in: user.referrals } }).then(referrals =>
+        referrals.map(ref => ({
+          ...ref.toObject(),
+          parentWallet: wallet, // Relación con el usuario principal
+        }))
+      );
   
-        const referrer = await User.findOne({ wallet: currentWallet });
+      for (let level = 1; level <= 7; level++) {
+        if (currentLevel.length === 0) break;
   
-        if (!referrer) break;
-  
-        console.log(`Nivel ${i + 1}: ${referrer.wallet}`);
-        uplineCommissions.push({
-          wallet: referrer.wallet,
-          name: referrer.name || "No disponible",
-          email: referrer.email || "No disponible",
+        // Agregar el nivel actual al resultado
+        ReferersCommissionsResponse.push({
+          level,
+          referrals: currentLevel.map(referral => ({
+            wallet: referral.wallet,
+            name: referral.name || "No disponible",
+            email: referral.email || "No disponible",
+            parentWallet: referral.parentWallet, // Relación con el nivel anterior
+          })),
         });
   
-        currentWallet = referrer.referred_by;
+        // Marcar las wallets visitadas
+        currentLevel.forEach(ref => visitedWallets.add(ref.wallet));
+  
+        // Obtener los referidos del siguiente nivel
+        const nextLevelWallets = currentLevel
+          .flatMap(ref => ref.referrals || [])
+          .filter(wallet => !visitedWallets.has(wallet));
+  
+        currentLevel = await User.find({ wallet: { $in: nextLevelWallets } }).then(referrals =>
+          referrals.map(ref => ({
+            ...ref.toObject(),
+            parentWallet: currentLevel.find(curr => curr.referrals.includes(ref.wallet))?.wallet || null,
+          }))
+        );
       }
   
       res.status(200).json({
-        message: "Upline commissions obtenidos con éxito.",
-        uplineCommissions,
+        message: "Referidos obtenidos con éxito.",
+        ReferersCommissions: ReferersCommissionsResponse,
       });
     } catch (error) {
-      console.error("Error al obtener upline commissions:", error.message);
+      console.error("Error al obtener referrals:", error.message);
       res.status(500).json({
-        message: "Error al obtener upline commissions.",
+        message: "Error al obtener referrals.",
         error: error.message,
       });
     }
@@ -297,4 +313,4 @@ const mongoose = require("mongoose");
     }
   };  
 
-module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getUplineCommissions };
+module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getReferersCommissions };

@@ -1,5 +1,5 @@
 const express = require("express");
-const { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getUplineCommissions } = require("../controllers/userController");
+const { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getReferersCommissions } = require("../controllers/userController");
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.get("/", getAllUsers);
 router.get("/:id", getUserById);
 
 // Ruta para obtener arbol de referidos
-router.get("/upline/:wallet", getUplineCommissions);
+router.get("/referers/:wallet", getReferersCommissions);
 
 // Ruta para actualizar un campo de un usuario por id
 router.put("/:id", updateUser);
