@@ -45,7 +45,7 @@ const getGroupedTransactions = async (req, res) => {
 // Controlador para crear una transacción
 const createTransaction = async (req, res) => {
     try {
-        const { userId, amount, date } = req.body;
+        const { userId, amount, date, hash } = req.body;
 
         if (!userId || !amount) {
             return res.status(400).json({ error: "userId y amount son requeridos." });
@@ -60,6 +60,7 @@ const createTransaction = async (req, res) => {
             userId,
             amount,
             date,
+            hash,
         });
 
         const savedTransaction = await transaction.save();
