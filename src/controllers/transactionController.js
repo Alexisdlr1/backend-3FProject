@@ -74,4 +74,20 @@ const createTransaction = async (req, res) => {
     }
 };
 
-module.exports = { createTransaction, getGroupedTransactions };
+const getTransactionById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const transactions = await Transaction.find({ userId: id });
+    if (!transactions || transactions.length === 0) {
+      return res.status(404).json({ message: "No se encontraron transacciones para este usuario." });
+    }
+
+    return res.status(200).json({ transactions });
+  } catch (error) {
+    console.error("Error al obtener transacciones:", error);
+    return res.status(500).json({ error: "Ocurrió un error en el servidor." });
+  }
+};
+
+module.exports = { createTransaction, getGroupedTransactions, getTransactionById };

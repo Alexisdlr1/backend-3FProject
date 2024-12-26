@@ -130,65 +130,120 @@ const mongoose = require("mongoose");
   // Crear un usuario
   const createUser = async (req, res) => {
     try {
-        const { name, email, password, referredBy, wallet, isAdmin, isActive } = req.body;
+      const { name, email, password, referredBy, wallet, isAdmin, isActive } = req.body;
 
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: "Faltan datos obligatorios." });
+      if (!name || !email || !password) {
+        return res.status(400).json({ message: "Faltan datos obligatorios." });
+      }
+
+      // Verificar si el email ya existe
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: "El email ya está registrado." });
+      }
+
+      // Verificar si la wallet de referido existe
+      let referrer = null;
+      if (referredBy) {
+        referrer = await User.findOne({ wallet: referredBy });
+        if (!referrer) {
+          return res.status(400).json({ message: "La wallet de referido no está registrada." });
         }
+      }
 
-        // Verificar si el email ya existe
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "El email ya está registrado." });
-        }
+      // Encriptar la contraseña antes de guardar
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Verificar si la wallet de referido existe
-        let referrer = null;
-        if (referredBy) {
-            referrer = await User.findOne({ wallet: referredBy });
-            if (!referrer) {
-                return res.status(400).json({ message: "La wallet de referido no está registrada." });
-            }
-        }
+      // Construir el árbol de referencias (uplineCommissions)
+      const uplineCommissions = [];
+      let currentReferrer = referrer; // Empieza con el referido inmediato
+      for (let i = 0; i < 3; i++) { // 3 niveles
+        if (!currentReferrer) break;
+        uplineCommissions.unshift(currentReferrer.wallet); // Agrega el nivel más cercano al inicio del arreglo
+        currentReferrer = await User.findOne({ wallet: currentReferrer.referred_by }); // Busca el siguiente nivel
+      }
 
-        // Encriptar la contraseña antes de guardar
-        const hashedPassword = await bcrypt.hash(password, 10);
+      const user = new User({
+        name,
+        email,
+        password: hashedPassword, // Guardar la contraseña encriptada
+        referred_by: referredBy,
+        wallet,
+        isAdmin,
+        isActive,
+        uplineCommissions, // Agregar el árbol de referencias
+      });
 
-        // Construir el árbol de referencias (uplineCommissions)
-        const uplineCommissions = [];
-        let currentReferrer = referrer; // Empieza con el referido inmediato
-        for (let i = 0; i < 3; i++) {
-            if (!currentReferrer) break;
-            uplineCommissions.unshift(currentReferrer.wallet); // Agrega el nivel más cercano al inicio del arreglo
-            currentReferrer = await User.findOne({ wallet: currentReferrer.referred_by }); // Busca el siguiente nivel
-        }
+      // Guardar el nuevo usuario
+      await user.save();
 
-        const user = new User({
-            name,
-            email,
-            password: hashedPassword, // Guardar la contraseña encriptada
-            referred_by: referredBy,
-            wallet,
-            isAdmin,
-            isActive,
-            uplineCommisions: uplineCommissions, // Agregar el árbol de referencias
-        });
+      // Si hay referido, agregar la wallet del nuevo usuario al arreglo de referrals
+      if (referrer) {
+        referrer.referrals.push(wallet);
+        await referrer.save(); // Guardar los cambios del referido
+      }
 
-        // Guardar el nuevo usuario
-        await user.save();
-
-        // Si hay referido, agregar la wallet del nuevo usuario al arreglo de referrals
-        if (referrer) {
-            referrer.referrals.push(wallet);
-            await referrer.save(); // Guardar los cambios del referido
-        }
-
-        res.status(201).json({ message: "Usuario creado con éxito.", user });
+      res.status(201).json({ message: "Usuario creado con éxito.", user });
     } catch (error) {
-        console.error("Error al crear usuario:", error.message);
-        res.status(500).json({ message: "Error al crear usuario.", error: error.message });
+      console.error("Error al crear usuario:", error.message);
+      res.status(500).json({ message: "Error al crear usuario.", error: error.message });
     }
-};
+  };
+
+  // Obtener información de los uplineCommissions de un usuario
+  const getUplineCommissions = async (req, res) => {
+    try {
+      console.log("Solicitud recibida en /f3api/users/upline/:wallet");
+      console.log("Parámetros recibidos:", req.params);
+  
+      const { wallet } = req.params;
+  
+      if (!wallet) {
+        console.log("Error: La wallet es obligatoria.");
+        return res.status(400).json({ message: "La wallet es obligatoria." });
+      }
+  
+      // Verificar si el usuario existe
+      const user = await User.findOne({ wallet });
+      if (!user) {
+        console.log(`Usuario no encontrado para la wallet: ${wallet}`);
+        return res.status(404).json({ message: "Usuario no encontrado." });
+      }
+  
+      // Construir la lista de uplineCommissions
+      const uplineCommissions = [];
+      let currentWallet = user.referred_by;
+  
+      console.log(`Generando upline commissions para la wallet: ${wallet}`);
+      for (let i = 0; i < 7; i++) {
+        if (!currentWallet) break;
+  
+        const referrer = await User.findOne({ wallet: currentWallet });
+  
+        if (!referrer) break;
+  
+        console.log(`Nivel ${i + 1}: ${referrer.wallet}`);
+        uplineCommissions.push({
+          wallet: referrer.wallet,
+          name: referrer.name || "No disponible",
+          email: referrer.email || "No disponible",
+        });
+  
+        currentWallet = referrer.referred_by;
+      }
+  
+      res.status(200).json({
+        message: "Upline commissions obtenidos con éxito.",
+        uplineCommissions,
+      });
+    } catch (error) {
+      console.error("Error al obtener upline commissions:", error.message);
+      res.status(500).json({
+        message: "Error al obtener upline commissions.",
+        error: error.message,
+      });
+    }
+  };  
 
   // Verificar si una wallet ya existe
   const checkWallet = async (req, res) => {
@@ -242,4 +297,4 @@ const mongoose = require("mongoose");
     }
   };  
 
-module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById };
+module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getUplineCommissions };

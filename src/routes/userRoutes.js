@@ -1,5 +1,5 @@
 const express = require("express");
-const { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById } = require("../controllers/userController");
+const { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getUplineCommissions } = require("../controllers/userController");
 
 const router = express.Router();
 
@@ -17,6 +17,9 @@ router.get("/", getAllUsers);
 
 // Ruta para obtener usuario por id
 router.get("/:id", getUserById);
+
+// Ruta para obtener arbol de referidos
+router.get("/upline/:wallet", getUplineCommissions);
 
 // Ruta para actualizar un campo de un usuario por id
 router.put("/:id", updateUser);
