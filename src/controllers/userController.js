@@ -283,6 +283,7 @@ const mongoose = require("mongoose");
     }
   };
 
+  // Actualizar datos del usuario
   const updateUser = async (req, res) => {
     try {
       const { id } = req.params;

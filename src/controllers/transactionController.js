@@ -44,35 +44,54 @@ const getGroupedTransactions = async (req, res) => {
 
 // Controlador para crear una transacción
 const createTransaction = async (req, res) => {
-    try {
-        const { userId, amount, date, hash } = req.body;
+  try {
+      const { userId, amount, date, hash } = req.body;
 
-        if (!userId || !amount) {
-            return res.status(400).json({ error: "userId y amount son requeridos." });
-        }
+      if (!userId || !amount) {
+          return res.status(400).json({ error: "userId y amount son requeridos." });
+      }
 
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ error: "Usuario no encontrado." });
-        }
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ error: "Usuario no encontrado." });
+      }
 
-        const transaction = new Transaction({
-            userId,
-            amount,
-            date,
-            hash,
-        });
+      let finalAmount = amount;
 
-        const savedTransaction = await transaction.save();
+      // Verificar si el campo membership está vacío o es 0
+      if (!user.membership || user.membership === 0) {
+          // Asignar 500 al campo membership
+          user.membership = 500;
 
-        return res.status(201).json({
-            message: "Transacción creada exitosamente.",
-            transaction: savedTransaction
-        });
-    } catch (error) {
-        console.error("Error al crear la transacción:", error);
-        return res.status(500).json({ error: "Ocurrió un error en el servidor." });
-    }
+          // Restar 500 del monto de la transacción
+          finalAmount -= 500;
+
+          // Verificar que el monto no sea negativo
+          if (finalAmount < 0) {
+              return res.status(400).json({ error: "El monto de la transacción no puede ser menor a 500." });
+          }
+
+          // Guardar el usuario actualizado
+          await user.save();
+      }
+
+      const transaction = new Transaction({
+          userId,
+          amount: finalAmount,
+          date,
+          hash,
+      });
+
+      const savedTransaction = await transaction.save();
+
+      return res.status(201).json({
+          message: "Transacción creada exitosamente.",
+          transaction: savedTransaction
+      });
+  } catch (error) {
+      console.error("Error al crear la transacción:", error);
+      return res.status(500).json({ error: "Ocurrió un error en el servidor." });
+  }
 };
 
 const getTransactionById = async (req, res) => {
