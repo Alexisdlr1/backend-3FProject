@@ -61,36 +61,54 @@ const mongoose = require("mongoose");
     console.log("Intentando iniciar sesión...");
     try {
       const { email, password, wallet } = req.body;
-      console.log("Datos recibidos:", { email, wallet });
-
-      // Verificar que los campos obligatorios estén presentes
+  
       if (!email || !password || !wallet) {
-        console.log("Faltan datos obligatorios para el login.");
         return res.status(400).json({ message: "Por favor, ingresa todos los campos." });
       }
-
-      // Buscar al usuario por email
+  
       const user = await User.findOne({ email });
       if (!user) {
-        console.log("Usuario no encontrado.");
         return res.status(401).json({ message: "Credenciales inválidas." });
       }
-
+  
+      // Comprobar si el usuario está bloqueado
+      if (user.lockUntil && user.lockUntil > Date.now()) {
+        return res.status(423).json({
+          message: `Cuenta bloqueada. Inténtalo después de ${new Date(user.lockUntil).toLocaleTimeString()}.`,
+        });
+      }
+  
       // Verificar la contraseña
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        console.log("Contraseña incorrecta.");
+        // Incrementar el contador de intentos fallidos
+        user.failedAttempts += 1;
+  
+        // Bloquear si se exceden los intentos permitidos
+        if (user.failedAttempts >= 6) {
+          user.lockUntil = Date.now() + 15 * 60 * 1000; // Bloqueo por 15 minutos
+          user.failedAttempts = 0; // Reiniciar el contador
+          await user.save();
+          return res.status(423).json({
+            message: "Cuenta bloqueada por múltiples intentos fallidos. Inténtalo después de 15 minutos.",
+          });
+        }
+  
+        await user.save();
         return res.status(401).json({ message: "Credenciales inválidas." });
       }
-
-      // Validar que la wallet proporcionada coincida con la registrada en la base de datos
+  
+      // Si la contraseña es correcta, restablecer los intentos fallidos y el bloqueo
+      user.failedAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
+  
+      // Validar que la wallet coincida
       if (user.wallet !== wallet) {
-        console.log("La wallet proporcionada no coincide.");
         return res.status(401).json({ message: "La wallet proporcionada no coincide con la registrada." });
       }
-
+  
       // Generar el token JWT
-      console.log("Generando token JWT...");
       const token = jwt.sign(
         {
           id: user._id,
@@ -106,8 +124,7 @@ const mongoose = require("mongoose");
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
-
-      console.log("Inicio de sesión exitoso.");
+  
       res.status(200).json({
         message: "Inicio de sesión exitoso.",
         token,
@@ -125,7 +142,7 @@ const mongoose = require("mongoose");
       console.error("Error en login:", error.message);
       res.status(500).json({ message: "Error en el servidor.", error: error.message });
     }
-  };
+  };  
   
   // Crear un usuario
   const createUser = async (req, res) => {

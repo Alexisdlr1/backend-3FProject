@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema({
     referrals: [{ type: String}],
     uplineCommisions: [{ type: String}],
     email_beneficiary: { type: String },
-    name_beneficiary: { type: String }
+    name_beneficiary: { type: String },
+    failedAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
