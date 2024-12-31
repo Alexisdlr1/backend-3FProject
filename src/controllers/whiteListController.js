@@ -1,5 +1,6 @@
 const WhiteList = require("../models/whiteListModel");
 const mongoose = require("mongoose");
+const User = require("../models/userModel");
 
 // Obtener todos los usuarios de la whitelist
 const getWhiteListUsers = async (req, res) => {
@@ -34,49 +35,65 @@ const getWhiteListUsers = async (req, res) => {
 };
 
 // Crear un nuevo usuario en la lista blanca
+// Crear un nuevo usuario en la lista blanca
 const createWhiteListUser = async (req, res) => {
-    try {
-      const { email, isApproved } = req.body;
-  
-      if (!email) {
-        return res.status(400).json({ message: "Faltan datos obligatorios." });
-      }
-  
-      // Verificar si el email ya existe
-      const existingUser = await WhiteList.findOne({ email });
-  
-      if (existingUser) {
-        if (!existingUser.isApproved) {
-            const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // Hace 24 horas
-  
-          if (existingUser.createdAt < oneDayAgo) {
-            return res.status(400).json({ message: "El email fue rechazado." });
-          }
-  
-          return res.status(400).json({ message: "El email ya está registrado en espera de aprobación." });
+  try {
+    const { email, isApproved } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Faltan datos obligatorios." });
+    }
+
+    // Verificar si el email ya existe en la colección de WhiteList
+    const existingUserInWhiteList = await WhiteList.findOne({ email });
+
+    if (existingUserInWhiteList) {
+      if (!existingUserInWhiteList.isApproved) {
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // Hace 24 horas
+
+        if (existingUserInWhiteList.createdAt < oneDayAgo) {
+          return res.status(400).json({ message: "El email fue rechazado." });
         }
-  
-        // Si el email ya está aprobado
-        return res.status(409).json({
-          message: "El email ya está registrado y aprobado.",
-          redirect: "/login", // URL a redirigir
+
+        return res.status(400).json({
+          message: "El email ya está registrado en espera de aprobación.",
         });
       }
-  
-      // Crear un nuevo usuario si no existe
-      const user = new WhiteList({
-        email,
-        isApproved,
+
+      // Si el email ya está aprobado, verificar si tiene una cuenta en User
+      const existingUserInUserCollection = await User.findOne({ email });
+
+      if (existingUserInUserCollection) {
+        // Si ya existe una cuenta, redirigir al login
+        return res.status(409).json({
+          message: "El email ya está registrado y aprobado.",
+          redirect: "/login",
+        });
+      }
+
+      // Si no existe una cuenta en User, redirigir al registro
+      return res.status(409).json({
+        message: "El email está aprobado, pero no tiene una cuenta. Redirigiendo al registro.",
+        redirect: "/register",
       });
-  
-      await user.save();
-  
-      res.status(201).json({ message: "Usuario creado con éxito.", user });
-    } catch (error) {
-      console.error("Error en createWhiteListUser:", error.message);
-      res.status(500).json({ message: "Error al crear usuario.", error: error.message });
     }
-  };
+
+    // Crear un nuevo usuario en la lista blanca si no existe
+    const user = new WhiteList({
+      email,
+      isApproved,
+    });
+
+    await user.save();
+
+    res.status(201).json({ message: "Usuario creado con éxito.", user });
+  } catch (error) {
+    console.error("Error en createWhiteListUser:", error.message);
+    res
+      .status(500)
+      .json({ message: "Error al crear usuario.", error: error.message });
+  }
+};
 
 // Actualizar un campo específico de un usuario por id
 const updateWhiteListUser = async (req, res) => {
