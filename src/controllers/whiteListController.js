@@ -35,7 +35,6 @@ const getWhiteListUsers = async (req, res) => {
 };
 
 // Crear un nuevo usuario en la lista blanca
-// Crear un nuevo usuario en la lista blanca
 const createWhiteListUser = async (req, res) => {
   try {
     const { email, isApproved } = req.body;

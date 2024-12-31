@@ -154,12 +154,12 @@ const mongoose = require("mongoose");
       // Encriptar la contraseña antes de guardar
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Construir el árbol de referencias (ReferersCommissions)
-      const ReferersCommissions = [];
+      // Construir el árbol de referencias (uplineCommisions)
+      const uplineCommisions = [];
       let currentReferrer = referrer; // Empieza con el referido inmediato
       for (let i = 0; i < 3; i++) { // 3 niveles
         if (!currentReferrer) break;
-        ReferersCommissions.unshift(currentReferrer.wallet); // Agrega el nivel más cercano al inicio del arreglo
+        uplineCommisions.unshift(currentReferrer.wallet); // Agrega el nivel más cercano al inicio del arreglo
         currentReferrer = await User.findOne({ wallet: currentReferrer.referred_by }); // Busca el siguiente nivel
       }
 
@@ -171,7 +171,7 @@ const mongoose = require("mongoose");
         wallet,
         isAdmin,
         isActive,
-        ReferersCommissions, // Agregar el árbol de referencias
+        uplineCommisions, // Agregar el árbol de referencias
       });
 
       // Guardar el nuevo usuario
