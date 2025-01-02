@@ -300,6 +300,31 @@ const mongoose = require("mongoose");
     }
   };
 
+  const checkUserWallet = async (req, res) => {
+    try {
+        const { wallet, id } = req.body;
+
+        // Validar que se proporcionó una wallet
+        if (!wallet) {
+            return res.status(400).json({ message: "La dirección de wallet es requerida." });
+        }
+
+        // Buscar si ya existe un usuario con la misma wallet
+        const user = await User.findOne({ id });
+        if (!user) {
+            return res.status(401).json({message: "Usuario no encontrado." });
+        }
+
+        if (user.wallet !== wallet) {
+          return res.status(401).json({ message: "La wallet proporcionada no coincide con la registrada." });
+        }
+
+        res.status(200).json({ exists: false, message: "La wallet pretenece al usuario." });
+    } catch (error) {
+        res.status(500).json({ message: "Error al verificar la wallet.", error: error.message });
+    }
+  };
+
   // Actualizar datos del usuario
   const updateUser = async (req, res) => {
     try {
