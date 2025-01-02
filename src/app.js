@@ -4,12 +4,13 @@ const { exec } = require("child_process");
 const userRoutes = require("./routes/userRoutes");
 const whiteListRoutes = require("./routes/whiteListRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+const sendgridRoutes = require("./routes/sendgrid");
 
 const app = express();
 
 // Middleware de CORS
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://3-f-project-nextjs.vercel.app/"],
+  origin: ["http://localhost:3000", "https://3-f-project-nextjs.vercel.app/", "https://sendgrid.api-docs.io"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 app.use("/f3api/users", userRoutes);
 app.use("/f3api/whiteList", whiteListRoutes);
 app.use("/f3api/transaction", transactionRoutes);
+app.use("/f3api/sendgrid", sendgridRoutes);
 
 // Endpoint para recibir el webhook de GitHub
 app.post("/f3api/webhook", (req, res) => {
