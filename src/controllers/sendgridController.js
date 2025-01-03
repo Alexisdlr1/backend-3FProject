@@ -19,19 +19,30 @@ const sendUserRegistrationEmail = async (toEmail, userName) => {
 };
 
 // WhiteList
-const sendWhitelistActivationEmail = async (toEmail, userEmail) => {
-  const msg = {
-    to: toEmail,
-    from: "admin+friends@steamhub.com.mx",
-    templateId: "d-a31c9812c2404a8085cb6c078caeaaaa", 
-    dynamic_template_data: {
-      user_email: userEmail,
-      whitelist_date: new Date().toISOString().split("T")[0],
-      additional_message: "¡Ahora puedes disfrutar de todos los beneficios!",
-    },
-  };
+const sendWhitelistActivationEmail = async (req, res) => {
+  const { toEmail, userEmail } = req.body;
 
-  await sgMail.send(msg);
+  if (!toEmail || !userEmail) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  try {
+    const msg = {
+      to: toEmail,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-a31c9812c2404a8085cb6c078caeaaaa",
+      dynamic_template_data: {
+        user_email: userEmail,
+        whitelist_date: new Date().toISOString().split("T")[0],
+      },
+    };
+
+    await sgMail.send(msg);
+    res.status(200).json({ message: "Email sent successfully" });
+  } catch (error) {
+    console.error("Error sending email: ", error);
+    res.status(500).json({ message: "Error sending email" });
+  }
 };
 
 // Reset Password
