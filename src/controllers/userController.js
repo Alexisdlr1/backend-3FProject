@@ -58,7 +58,6 @@ const mongoose = require("mongoose");
 
   // Login usuario con JWT (Nuevo)
   const loginUser = async (req, res) => {
-    console.log("Intentando iniciar sesión...");
     try {
       const { email, password, wallet } = req.body;
 
