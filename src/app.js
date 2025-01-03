@@ -10,7 +10,7 @@ const app = express();
 
 // Middleware de CORS
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://3-f-project-nextjs.vercel.app/", "https://sendgrid.api-docs.io"],
+  origin: ["http://localhost:3000", "https://3-f-project-nextjs.vercel.app/"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -23,7 +23,7 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("Funciona??.");
+  res.status(200).send("HOLAAAA??.");
 });
 
 // Rutas
