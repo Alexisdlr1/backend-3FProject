@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     isActive: { type: Boolean },
     wallet: { type: String },
     membership: { type: Number },
+    totalBalance: { type: Number, default: 0 },
     referred_by: { type: String },
     referrals: [{ type: String}],
     uplineCommisions: [{ type: String}],
