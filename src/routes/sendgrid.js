@@ -1,9 +1,37 @@
 const express = require("express");
-const { sendWelcome } = require("../controllers/sendgridController");
+const { sendUserRegistrationEmail,
+    sendWhitelistActivationEmail,
+    sendPasswordResetRequestEmail,
+    sendPasswordChangeConfirmationEmail,
+    sendPulllPaymentEmail,
+    sendCommissionPaymentEmail,
+    sendSavingsCreationEmail,
+    sendNewAffiliateEmail, } = require("../controllers/sendgridController");
 
 const router = express.Router();
 
-// Ruta para enviar el correo de bienvenida
-router.post("/welcome", sendWelcome);
+// Ruta para enviar el correo de register
+router.post("/register", sendUserRegistrationEmail);
+
+// Ruta para enviar el correo de whitelist
+router.post("/whitelist", sendWhitelistActivationEmail);
+
+// Ruta para enviar el correo de resetPassword
+router.post("/resetPassword", sendPasswordResetRequestEmail);
+
+// Ruta para enviar el correo de passwordConfirmation
+router.post("/passwordConfirmation", sendPasswordChangeConfirmationEmail);
+
+// Ruta para enviar el correo de pull
+router.post("/pull", sendPulllPaymentEmail);
+
+// Ruta para enviar el correo de comission
+router.post("/comission", sendCommissionPaymentEmail);
+
+// Ruta para enviar el correo de savings
+router.post("/saving", sendSavingsCreationEmail);
+
+// Ruta para enviar el correo de savings
+router.post("/newAffiliate", sendNewAffiliateEmail);
 
 module.exports = router;
