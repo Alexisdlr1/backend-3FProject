@@ -125,6 +125,8 @@ const mongoose = require("mongoose");
           ReferersCommissions: user.uplineCommisions,
           email_beneficiary: user.email_beneficiary,
           name_beneficiary: user.name_beneficiary,
+          balance: user.totalBalance,
+          referrals: user.referrals,
         },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
