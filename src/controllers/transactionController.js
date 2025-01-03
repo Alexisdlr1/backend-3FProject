@@ -44,6 +44,8 @@ const getGroupedTransactions = async (req, res) => {
 
 // Controlador para crear una transacción
 const createTransaction = async (req, res) => {
+  const MEMBERSHIP_AMOUNT = 500;
+
   try {
       const { userId, amount, date, hash } = req.body;
 
@@ -58,22 +60,30 @@ const createTransaction = async (req, res) => {
 
       let finalAmount = amount;
 
+      // Verificar que el monto no sea negativo
+      if (finalAmount < 0) {
+        return res.status(400).json({ error: "El monto de la transacción no puede ser negativa." });
+      }
+
       // Verificar si el campo membership está vacío o es 0
       if (!user.membership || user.membership === 0) {
-          // Asignar 500 al campo membership
-          user.membership = 500;
+          // Restar Valor de membresia del monto de la transacción
+          finalAmount -= MEMBERSHIP_AMOUNT;
 
-          // Restar 500 del monto de la transacción
-          finalAmount -= 500;
-
-          // Verificar que el monto no sea negativo
-          if (finalAmount < 0) {
+          // Verificar que efectivamente corresponda al monto requerido
+          if (amount - finalAmount !== MEMBERSHIP_AMOUN) {
               return res.status(400).json({ error: "El monto de la transacción no puede ser menor a 500." });
           }
 
-          // Guardar el usuario actualizado
-          await user.save();
+          // Actualiza el campo membership si esta correcto
+          user.membership = MEMBERSHIP_AMOUNT;
       }
+
+      // Actualiza el balance de los ahorros totales de cada miembro
+      user.totalBalance += finalAmount;
+        
+      // Guardar el usuario actualizado
+      await user.save();
 
       const transaction = new Transaction({
           userId,
