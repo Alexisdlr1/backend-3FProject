@@ -7,18 +7,41 @@ const Notification = require("../models/notificationModel");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Register
-const sendUserRegistrationEmail = async (toEmail, userName) => {
-  const msg = {
-    to: toEmail,
-    from: "admin+friends@steamhub.com.mx", // Correo autorizado
-    templateId: "d-a72486c2321a4d6b980cd4b621fc0553",
-    dynamic_template_data: {
-      user_name: userName,
-      registration_date: new Date().toISOString().split("T")[0],
-    },
-  };
+const sendUserRegistrationEmail = async (req, res) => {
+  const { toEmail, userName } = req.body;
 
-  await sgMail.send(msg);
+  if (!toEmail || !userName) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  try {
+    const msg = {
+      to: toEmail,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-a72486c2321a4d6b980cd4b621fc0553",
+      dynamic_template_data: {
+        user_name: userName,
+        register_date: new Date().toISOString().split("T")[0],
+      },
+    };
+
+    // Enviar correo
+    await sgMail.send(msg);
+
+    // Crear una notificación en la base de datos
+    const notification = new Notification({
+      email: toEmail,
+      message: `Email: ${toEmail} registrado con exito`,
+      amount: null,
+    });
+
+    await notification.save();
+
+    res.status(200).json({ message: "Email sent successfully and notification saved." });
+  } catch (error) {
+    console.error("Error sending email: ", error);
+    res.status(500).json({ message: "Error sending email" });
+  }
 };
 
 // WhiteList
@@ -220,19 +243,54 @@ const sendSavingsCreationEmail = async (req, res) => {
 };
 
 // Affiliate
-const sendNewAffiliateEmail = async (toEmail, userName, affiliateName) => {
-  const msg = {
-    to: toEmail,
-    from: "admin+friends@steamhub.com.mx",
-    templateId: "d-70b346a15c604fb1b56549abbf938033", 
-    dynamic_template_data: {
-      user_name: userName,
-      affiliate_name: affiliateName,
-      affiliate_date: new Date().toISOString().split("T")[0],
-    },
-  };
+const sendNewAffiliateEmail = async (req, res) => {
+  const { referredBy,  affiliateName, affiliateEmail } = req.body;
 
-  await sgMail.send(msg);
+  if (!referredBy || !affiliateName) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  // Verificar si la wallet de referido existe y obtener su nombre
+  let toEmail = null;
+  let userName = null;
+  if (referredBy) {
+    const referrer = await User.findOne({ wallet: referredBy });
+    if (!referrer) {
+      return res.status(400).json({ message: "La wallet de referido no está registrada." });
+    }
+    toEmail = referrer.email; // Obtener el email del referido
+    userName = referrer.name // Obtener el name del referido
+  }
+
+  try {
+    const msg = {
+      to: toEmail,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-70b346a15c604fb1b56549abbf938033",
+      dynamic_template_data: {
+        user_name: userName,
+        affiliate_name: affiliateName,
+        affiliate_date: new Date().toISOString().split("T")[0],
+      },
+    };
+
+    // Enviar correo
+    await sgMail.send(msg);
+
+    // Crear una notificación en la base de datos
+    const notification = new Notification({
+      email: affiliateEmail,
+      message: `Email con notificación de nuevo afiliado para: ${toEmail}`,
+      amount: null,
+    });
+
+    await notification.save();
+
+    res.status(200).json({ message: "Email sent successfully and notification saved." });
+  } catch (error) {
+    console.error("Error sending email: ", error);
+    res.status(500).json({ message: "Error sending email" });
+  }
 };
 
 module.exports = {
