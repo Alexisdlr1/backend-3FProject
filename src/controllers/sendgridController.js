@@ -137,7 +137,7 @@ const sendPasswordChangeConfirmationEmail = async (req, res) => {
     const notification = new Notification({
       email: toEmail,
       message: `Confirmacion de cambio de contraseña al correo ${toEmail}`,
-      amount: null, // O puedes eliminar este campo si no aplica
+      amount: null,
     });
 
     await notification.save();
@@ -182,19 +182,41 @@ const sendCommissionPaymentEmail = async (toEmail, userName, commissionAmount) =
 };
 
 //Saving
-const sendSavingsCreationEmail = async (toEmail, userName, savingsName) => {
-  const msg = {
-    to: toEmail,
-    from: "admin+friends@steamhub.com.mx",
-    templateId: "d-7225783fdc954bc799c276271400bac4", 
-    dynamic_template_data: {
-      user_name: userName,
-      savings_name: savingsName,
-      savings_date: new Date().toISOString().split("T")[0],
-    },
-  };
+const sendSavingsCreationEmail = async (req, res) => {
+  const { toEmail, amount } = req.body;
 
-  await sgMail.send(msg);
+  if (!toEmail || !amount) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  try {
+    // Configurar y enviar el correo
+    const msg = {
+      to: toEmail,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-7225783fdc954bc799c276271400bac4",
+      dynamic_template_data: {
+        email: toEmail,
+        creation_date: new Date().toISOString().split("T")[0],
+      },
+    };
+
+    await sgMail.send(msg);
+
+    // Guardar la notificación en la base de datos
+    const notification = new Notification({
+      email: toEmail,
+      message: `Confirmacion de nuevo ahorro en el correo: ${toEmail}`,
+      amount: amount,
+    });
+
+    await notification.save();
+
+    res.status(200).json({ message: "Saving email sent and notification saved." });
+  } catch (error) {
+    console.error("Error sending saving email: ", error);
+    res.status(500).json({ message: "Error sending saving email." });
+  }
 };
 
 // Affiliate
