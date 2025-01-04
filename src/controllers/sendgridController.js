@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const User = require("../models/userModel");
 const sgMail = require("@sendgrid/mail");
+const Notification = require("../models/notificationModel");
 
 // Configurar la API Key de SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -39,8 +40,19 @@ const sendWhitelistActivationEmail = async (req, res) => {
       },
     };
 
+    // Enviar correo
     await sgMail.send(msg);
-    res.status(200).json({ message: "Email sent successfully" });
+
+    // Crear una notificación en la base de datos
+    const notification = new Notification({
+      email: toEmail,
+      message: `Email: ${toEmail} añadido a la WhiteList`,
+      amount: null,
+    });
+
+    await notification.save();
+
+    res.status(200).json({ message: "Email sent successfully and notification saved." });
   } catch (error) {
     console.error("Error sending email: ", error);
     res.status(500).json({ message: "Error sending email" });
@@ -82,6 +94,16 @@ const sendPasswordResetRequestEmail = async (req, res) => {
     };
 
     await sgMail.send(msg);
+
+    // Crear una notificación en la base de datos
+    const notification = new Notification({
+      email: email,
+      message: `El usuario: ${user.name} solicito cambio de contraseña`,
+      amount: null,
+    });
+
+    await notification.save();
+
     res.status(200).json({ message: "Correo de restablecimiento enviado con éxito." });
   } catch (error) {
     console.error("Error al solicitar restablecimiento:", error.message);
@@ -90,18 +112,41 @@ const sendPasswordResetRequestEmail = async (req, res) => {
 };
 
 // Password Change
-const sendPasswordChangeConfirmationEmail = async (toEmail, userName) => {
-  const msg = {
-    to: toEmail,
-    from: "admin+friends@steamhub.com.mx",
-    templateId: "d-d6e7c8f65f5c48e895cc2a026798f62f", 
-    dynamic_template_data: {
-      user_name: userName,
-      update_date: new Date().toISOString().split("T")[0],
-    },
-  };
+const sendPasswordChangeConfirmationEmail = async (req, res) => {
+  const { toEmail } = req.body;
 
-  await sgMail.send(msg);
+  if (!toEmail) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  try {
+    // Configurar y enviar el correo
+    const msg = {
+      to: toEmail,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-d6e7c8f65f5c48e895cc2a026798f62f",
+      dynamic_template_data: {
+        email: toEmail,
+        update_date: new Date().toISOString().split("T")[0],
+      },
+    };
+
+    await sgMail.send(msg);
+
+    // Guardar la notificación en la base de datos
+    const notification = new Notification({
+      email: toEmail,
+      message: `Confirmacion de cambio de contraseña al correo ${toEmail}`,
+      amount: null, // O puedes eliminar este campo si no aplica
+    });
+
+    await notification.save();
+
+    res.status(200).json({ message: "Password confirmation email sent and notification saved." });
+  } catch (error) {
+    console.error("Error sending password confirmation email: ", error);
+    res.status(500).json({ message: "Error sending confirmation email." });
+  }
 };
 
 // Pull
