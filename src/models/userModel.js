@@ -16,6 +16,8 @@ const userSchema = new mongoose.Schema({
     name_beneficiary: { type: String },
     failedAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);

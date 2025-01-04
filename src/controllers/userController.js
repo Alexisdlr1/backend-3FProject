@@ -361,64 +361,64 @@ const mongoose = require("mongoose");
       res.status(500).json({ message: "Error al actualizar el usuario.", error: error.message });
     }
   };  
-
-// Resetear contraseña
-const resetPassword = async (req, res) => {
-  console.log("Intentando resetear contraseña...");
-  try {
-    const { email, wallet, newPassword } = req.body;
-    console.log("Datos recibidos:", { email, wallet });
-
-    // Verificar que los campos obligatorios estén presentes
-    if (!email || !wallet || !newPassword) {
-      console.log("Faltan datos obligatorios para resetear la contraseña.");
-      return res.status(400).json({ message: "Por favor, ingresa todos los campos." });
-    }
-
-    // Buscar al usuario por email
-    const user = await User.findOne({ email });
-    if (!user) {
-      console.log("Usuario no encontrado.");
-      return res.status(404).json({ message: "El usuario no existe." });
-    }
-
-    // Validar que la wallet proporcionada coincida con la registrada en la base de datos
-    if (user.wallet !== wallet) {
-      console.log("La wallet proporcionada no coincide.");
-      return res.status(401).json({ message: "La wallet proporcionada no coincide con la registrada." });
-    }
-
-    // Validar formato de la nueva contraseña
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
-    if (!passwordRegex.test(newPassword)) {
-      console.log("La contraseña no cumple con los requisitos.");
-      return res.status(400).json({
-        message: "La contraseña debe tener al menos 8 caracteres, incluir una mayúscula y un carácter especial.",
+  
+  // Actualizar password
+  const resetPassword = async (req, res) => {
+    console.log("Intentando resetear contraseña...");
+    try {
+      const { token, email, newPassword } = req.body; // Incluye el token en el body
+  
+      console.log("Datos recibidos:", { email, token });
+  
+      // Verificar que los campos obligatorios estén presentes
+      if (!token || !email || !newPassword) {
+        console.log("Faltan datos obligatorios para resetear la contraseña.");
+        return res.status(400).json({ message: "Por favor, ingresa todos los campos." });
+      }
+  
+      // Buscar al usuario por el token de restablecimiento y verificar si ha expirado
+      const user = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() },
       });
+      if (!user) {
+        console.log("Token inválido o expirado.");
+        return res.status(400).json({ message: "Token inválido o expirado." });
+      }
+  
+      // Validar formato de la nueva contraseña
+      const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        console.log("La contraseña no cumple con los requisitos.");
+        return res.status(400).json({
+          message: "La contraseña debe tener al menos 8 caracteres, incluir una mayúscula y un carácter especial.",
+        });
+      }
+  
+      // Validar que la nueva contraseña no sea la misma que la actual
+      const isSamePassword = await bcrypt.compare(newPassword, user.password);
+      if (isSamePassword) {
+        console.log("La nueva contraseña no puede ser igual a la anterior.");
+        return res.status(400).json({ message: "La nueva contraseña no puede ser igual a la anterior." });
+      }
+  
+      // Encriptar la nueva contraseña
+      console.log("Encriptando nueva contraseña...");
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+  
+      // Actualizar la contraseña en la base de datos
+      user.password = hashedPassword;
+      user.resetPasswordToken = undefined; // Eliminar el token de restablecimiento
+      user.resetPasswordExpires = undefined; // Eliminar la expiración del token
+      await user.save();
+  
+      console.log("Contraseña actualizada exitosamente.");
+      res.status(200).json({ message: "Contraseña restablecida exitosamente." });
+    } catch (error) {
+      console.error("Error en resetPassword:", error.message);
+      res.status(500).json({ message: "Error en el servidor.", error: error.message });
     }
-
-    // Validar que la nueva contraseña no sea la misma que la actual
-    const isSamePassword = await bcrypt.compare(newPassword, user.password);
-    if (isSamePassword) {
-      console.log("La nueva contraseña no puede ser igual a la anterior.");
-      return res.status(400).json({ message: "La nueva contraseña no puede ser igual a la anterior." });
-    }
-
-    // Encriptar la nueva contraseña
-    console.log("Encriptando nueva contraseña...");
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    // Actualizar la contraseña en la base de datos
-    user.password = hashedPassword;
-    await user.save();
-
-    console.log("Contraseña actualizada exitosamente.");
-    res.status(200).json({ message: "Contraseña restablecida exitosamente." });
-  } catch (error) {
-    console.error("Error en resetPassword:", error.message);
-    res.status(500).json({ message: "Error en el servidor.", error: error.message });
-  }
-};
+  };  
 
 module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getReferersCommissions, resetPassword };

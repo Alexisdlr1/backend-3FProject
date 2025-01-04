@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+const User = require("../models/userModel");
 const sgMail = require("@sendgrid/mail");
 
 // Configurar la API Key de SendGrid
@@ -46,18 +48,45 @@ const sendWhitelistActivationEmail = async (req, res) => {
 };
 
 // Reset Password
-const sendPasswordResetRequestEmail = async (toEmail, userName, resetLink) => {
-  const msg = {
-    to: toEmail,
-    from: "admin+friends@steamhub.com.mx",
-    templateId: "TEMPLATE_ID_RESET_SOLICITUD", 
-    dynamic_template_data: {
-      user_name: userName,
-      reset_link: resetLink,
-    },
-  };
+const sendPasswordResetRequestEmail = async (req, res) => {
+  const { email } = req.body;
 
-  await sgMail.send(msg);
+  try {
+    // Verificar si el email existe en la base de datos
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "El correo no está registrado." });
+    }
+
+    // Generar un token único y su expiración
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hora
+
+    // Guardar el token y su expiración en el usuario
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = resetTokenExpiry;
+    await user.save();
+
+    // Crear el enlace para restablecer la contraseña con parámetro en la URL
+    const resetLink = `${process.env.CLIENT_URL}/resetPassword?email=${encodeURIComponent(user.email)}&token=${resetToken}`;
+
+    // Enviar correo con el enlace
+    const msg = {
+      to: email,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-cbc2dfa545a847c09e67d1c5b8288b7a",
+      dynamic_template_data: {
+        user_name: user.name,
+        reset_link: resetLink,
+      },
+    };
+
+    await sgMail.send(msg);
+    res.status(200).json({ message: "Correo de restablecimiento enviado con éxito." });
+  } catch (error) {
+    console.error("Error al solicitar restablecimiento:", error.message);
+    res.status(500).json({ message: "Error al solicitar restablecimiento de contraseña." });
+  }
 };
 
 // Password Change
