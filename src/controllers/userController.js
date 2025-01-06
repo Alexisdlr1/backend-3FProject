@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const Notification = require("../models/notificationModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
@@ -421,4 +422,48 @@ const mongoose = require("mongoose");
     }
   };  
 
-module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getReferersCommissions, resetPassword };
+// Función para obtener las notificaciones por email usando POST
+const getNotificationsBySingleEmail = async (req, res) => {
+  try {
+    console.log("Iniciando getNotificationsBySingleEmail...");
+
+    const { email } = req.body;  // Usar body en lugar de query
+    if (!email) {
+      return res.status(400).json({ error: "El parámetro 'email' es obligatorio." });
+    }
+
+    const page = parseInt(req.body.page) || 1;
+    const limit = parseInt(req.body.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    console.log(`Buscando notificaciones para el email: ${email}, page: ${page}, limit: ${limit}`);
+
+    const notifications = await Notification.find({ email })
+      .skip(skip)
+      .limit(limit)
+      .sort({ date: -1 });
+
+    const totalNotifications = await Notification.countDocuments({ email });
+
+    if (!notifications || notifications.length === 0) {
+      return res.status(404).json({ error: "No se encontraron notificaciones para este email." });
+    }
+
+    console.log(`Notificaciones encontradas: ${notifications.length}`);
+    res.status(200).json({
+      total: totalNotifications,
+      page,
+      pages: Math.ceil(totalNotifications / limit),
+      email,
+      notifications,
+    });
+  } catch (error) {
+    console.error("Error en getNotificationsBySingleEmail:", error);
+    res.status(500).json({
+      message: "Error al obtener notificaciones para el email.",
+      error: error.message,  // Incluye más detalles del error
+    });
+  }
+};
+
+module.exports = { createUser, getAllUsers, loginUser, checkWallet, updateUser, getUserById, getReferersCommissions, resetPassword, getNotificationsBySingleEmail };

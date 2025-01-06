@@ -23,7 +23,7 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("Check again.");
+  res.status(200).send("Test 06/01/2025.");
 });
 
 // Rutas
