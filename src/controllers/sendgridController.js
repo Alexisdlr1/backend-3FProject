@@ -3,6 +3,18 @@ const User = require("../models/userModel");
 const sgMail = require("@sendgrid/mail");
 const Notification = require("../models/notificationModel");
 
+// Tipo de notificacion
+const NOTIFICATION_TYPES = Object.freeze({
+  REGISTRATION: "REGISTRATION",
+  WHITELIST: "WHITELIST",
+  RESET_PASSWORD: "RESET PASSWORD",
+  CHANGE_PASSWORD: "CHANGE PASSWORD",
+  PULL_PAYMENT: "PULL PAYMENT",
+  NEW_SAVING: "NEW SAVING",
+  COMMISSION_PAYMENT: "COMMISSION PAYMENT",
+  NEW_AFFILIATE: "NEW AFFILIATE",
+})
+
 // Configurar la API Key de SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -30,6 +42,7 @@ const sendUserRegistrationEmail = async (req, res) => {
 
     // Crear una notificación en la base de datos
     const notification = new Notification({
+      type: NOTIFICATION_TYPES.REGISTRATION,
       email: toEmail,
       message: `Email: ${toEmail} registrado con exito`,
       amount: null,
@@ -68,6 +81,7 @@ const sendWhitelistActivationEmail = async (req, res) => {
 
     // Crear una notificación en la base de datos
     const notification = new Notification({
+      type: NOTIFICATION_TYPES.WHITELIST,
       email: toEmail,
       message: `Email: ${toEmail} añadido a la WhiteList`,
       amount: null,
@@ -120,6 +134,7 @@ const sendPasswordResetRequestEmail = async (req, res) => {
 
     // Crear una notificación en la base de datos
     const notification = new Notification({
+      type: NOTIFICATION_TYPES.RESET_PASSWORD,
       email: email,
       message: `El usuario: ${user.name} solicito cambio de contraseña`,
       amount: null,
@@ -158,6 +173,7 @@ const sendPasswordChangeConfirmationEmail = async (req, res) => {
 
     // Guardar la notificación en la base de datos
     const notification = new Notification({
+      type: NOTIFICATION_TYPES.CHANGE_PASSWORD,
       email: toEmail,
       message: `Confirmacion de cambio de contraseña al correo ${toEmail}`,
       amount: null,
@@ -173,35 +189,84 @@ const sendPasswordChangeConfirmationEmail = async (req, res) => {
 };
 
 // Pull
-const sendPulllPaymentEmail = async (toEmail, userName, amount) => {
-  const msg = {
-    to: toEmail,
-    from: "admin+friends@steamhub.com.mx",
-    templateId: "d-517f77e6daf445a796e37b98a4316794", 
-    dynamic_template_data: {
-      user_name: userName,
-      payment_date: new Date().toISOString().split("T")[0],
-      amount,
-    },
-  };
+const sendPulllPaymentEmail = async (req, res) => {
+  const { toEmail, userName, amount } = req.body;
 
-  await sgMail.send(msg);
+  if (!toEmail || !userName || !amount) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  try {
+    const msg = {
+      to: toEmail,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-517f77e6daf445a796e37b98a4316794",
+      dynamic_template_data: {
+        user_name: userName,
+        payment_date: new Date().toISOString().split("T")[0],
+        amount,
+      },
+    };
+
+    await sgMail.send(msg);
+
+    // Save the notification event in DB
+    const notification = new Notification({
+      type: NOTIFICATION_TYPES.PULL_PAYMENT,
+      email: toEmail,
+      message: `Nueva comision detectada hacia el usuario: ${toEmail}`,
+      amount: commissionAmount,
+    });
+
+    await notification.save();
+
+    res.status(200).json({ message: "Pull payment email sent and notification saved." });
+  } catch (error) {
+    console.error("Error sending pull payment email: ", e);
+    res.status(500).json({ message: "Error sending pull payment email." });
+  }
+
+
 };
 
 // Commissions
-const sendCommissionPaymentEmail = async (toEmail, userName, commissionAmount) => {
-  const msg = {
-    to: toEmail,
-    from: "admin+friends@steamhub.com.mx",
-    templateId: "d-160f146d203d46658d9f2fc03b2a1f8b", 
-    dynamic_template_data: {
-      user_name: userName,
-      commission_date: new Date().toISOString().split("T")[0],
-      commission_amount: commissionAmount,
-    },
-  };
+const sendCommissionPaymentEmail = async (req, res) => {
+  const { toEmail, userName, commissionAmount } = req.body;
 
-  await sgMail.send(msg);
+  if (!toEmail || !userName || !commissionAmount) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  try {
+    // Email settings
+    const msg = {
+      to: toEmail,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-160f146d203d46658d9f2fc03b2a1f8b",
+      dynamic_template_data: {
+        user_name: userName,
+        commission_date: new Date().toISOString().split("T")[0],
+        commission_amount: commissionAmount,
+      },
+    };
+
+    await sgMail.send(msg);
+
+    // Save the notification event in DB
+    const notification = new Notification({
+      type: NOTIFICATION_TYPES.COMMISSION_PAYMENT,
+      email: toEmail,
+      message: `Nueva comision detectada hacia el usuario: ${toEmail}`,
+      amount: commissionAmount,
+    });
+
+    await notification.save();
+
+    res.status(200).json({ message: "Commission payment email sent and notification saved." });
+  } catch (e) {
+    console.error("Error sending commission payment email: ", e);
+    res.status(500).json({ message: "Error sending commission payment email." });
+  }
 };
 
 //Saving
@@ -228,6 +293,7 @@ const sendSavingsCreationEmail = async (req, res) => {
 
     // Guardar la notificación en la base de datos
     const notification = new Notification({
+      type: NOTIFICATION_TYPES.NEW_SAVING,
       email: toEmail,
       message: `Confirmacion de nuevo ahorro en el correo: ${toEmail}`,
       amount: amount,
@@ -244,7 +310,7 @@ const sendSavingsCreationEmail = async (req, res) => {
 
 // Affiliate
 const sendNewAffiliateEmail = async (req, res) => {
-  const { referredBy,  affiliateName, affiliateEmail } = req.body;
+  const { referredBy, affiliateName, affiliateEmail } = req.body;
 
   if (!referredBy || !affiliateName) {
     return res.status(400).json({ message: "Missing required fields." });
@@ -279,6 +345,7 @@ const sendNewAffiliateEmail = async (req, res) => {
 
     // Crear una notificación en la base de datos
     const notification = new Notification({
+      type: NOTIFICATION_TYPES.NEW_AFFILIATE,
       email: affiliateEmail,
       message: `Email con notificación de nuevo afiliado para: ${toEmail}`,
       amount: null,
