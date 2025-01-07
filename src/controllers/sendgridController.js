@@ -343,11 +343,10 @@ const sendNewAffiliateEmail = async (req, res) => {
     // Enviar correo
     await sgMail.send(msg);
 
-    // Crear una notificación en la base de datos
     const notification = new Notification({
       type: NOTIFICATION_TYPES.NEW_AFFILIATE,
-      email: affiliateEmail,
-      message: `Email con notificación de nuevo afiliado para: ${toEmail}`,
+      email: toEmail,
+      message: `${affiliateEmail} es un afiliado directo de ${toEmail}`,
       amount: null,
     });
 
