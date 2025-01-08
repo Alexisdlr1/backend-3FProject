@@ -127,6 +127,7 @@ const mongoose = require("mongoose");
           name_beneficiary: user.name_beneficiary,
           balance: user.totalBalance,
           referrals: user.referrals,
+          membership: user.membership,
         },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
@@ -143,6 +144,7 @@ const mongoose = require("mongoose");
           ReferersCommissions: user.uplineCommisions,
           email_beneficiary: user.email_beneficiary,
           name_beneficiary: user.name_beneficiary,
+          membership: user.membership,
         },
       });
     } catch (error) {
