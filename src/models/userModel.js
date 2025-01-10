@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
     isAdmin: { type: Boolean },
     isActive: { type: Boolean },
     wallet: { type: String },
-    membership: { type: Number },
+    membership: { type: Number, default: 0 },
     totalBalance: { type: Number, default: 0 },
     referred_by: { type: String },
     referrals: [{ type: String}],
