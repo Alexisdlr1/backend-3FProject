@@ -107,7 +107,7 @@ const createTransaction = async (req, res) => {
 const getTransactionAndBalanceById = async (req, res) => {
   
   try {
-    const { id } = req.params.id;
+    const { id } = req.params;
 
     if (!id) {
       return res.status(400).json({ error: "El atributo 'id' es obligatorio." });
@@ -119,14 +119,14 @@ const getTransactionAndBalanceById = async (req, res) => {
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    // const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-    const transactions = await Transaction.find({ userId: id });
-      // .skip(skip)
-      // .limit(limit)
-      // .sort({ date: -1 });
+    const transactions = await Transaction.find({ userId: id })
+      .skip(skip)
+      .limit(limit)
+      .sort({ date: -1 });
 
-    const totalTransactions = await Notification.countDocuments({ userId: id });
+    const totalTransactions = await Transaction.countDocuments({ userId: id });
     
     if (!transactions || transactions.length === 0) {
       return res.status(404).json({ message: "No se encontraron transacciones para este usuario." });
