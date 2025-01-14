@@ -4,6 +4,7 @@ const notificationSchema = new mongoose.Schema({
     type: { type: String, required: true },
     email: { type: String, required: true },
     message: { type: String, required: true },
+    message_ui: { type: String, required: false },
     date: { type: Date, default: Date.now },
     amount: { type: Number },
 }, { timestamps: true });

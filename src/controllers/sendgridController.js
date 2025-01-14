@@ -15,6 +15,19 @@ const NOTIFICATION_TYPES = Object.freeze({
   NEW_AFFILIATE: "NEW AFFILIATE",
 })
 
+const MESSAGE_UI = Object.freeze({
+  REGISTRATION: "¡Te has registrado exitosamente, Bienvenido!",
+  WHITELIST: "Tu email se ha aprobado en Friends and Family.",
+  RESET_PASSWORD: "Has solicitado un cambio de contraseña.",
+  CHANGE_PASSWORD: "Tu contraseña se ha actualizado exitosamente.",
+  PULL_PAYMENT: "Has recibido un nuevo pago del pull.",
+  NEW_SAVING: "¡Has iniciado un nuevo ahorro, sigue así!",
+  COMMISSION_PAYMENT: "¡Has recibido una nueva comisión, Felicidades!",
+  NEW_AFFILIATE: (affiliateName) => {
+    return `${affiliateName} es ahora afiliado tuyo`;
+  },
+})
+
 // Configurar la API Key de SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -45,6 +58,7 @@ const sendUserRegistrationEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.REGISTRATION,
       email: toEmail,
       message: `Email: ${toEmail} registrado con exito`,
+      message_ui: MESSAGE_UI.REGISTRATION,
       amount: null,
     });
 
@@ -84,6 +98,7 @@ const sendWhitelistActivationEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.WHITELIST,
       email: toEmail,
       message: `Email: ${toEmail} añadido a la WhiteList`,
+      message_ui: MESSAGE_UI.WHITELIST,
       amount: null,
     });
 
@@ -137,6 +152,7 @@ const sendPasswordResetRequestEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.RESET_PASSWORD,
       email: email,
       message: `El usuario: ${user.name} solicito cambio de contraseña`,
+      message_ui: MESSAGE_UI.RESET_PASSWORD,
       amount: null,
     });
 
@@ -176,6 +192,7 @@ const sendPasswordChangeConfirmationEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.CHANGE_PASSWORD,
       email: toEmail,
       message: `Confirmacion de cambio de contraseña al correo ${toEmail}`,
+      message_ui: MESSAGE_UI.CHANGE_PASSWORD,
       amount: null,
     });
 
@@ -215,6 +232,7 @@ const sendPulllPaymentEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.PULL_PAYMENT,
       email: toEmail,
       message: `Nueva comision detectada hacia el usuario: ${toEmail}`,
+      message_ui: MESSAGE_UI.PULL_PAYMENT,
       amount: commissionAmount,
     });
 
@@ -257,6 +275,7 @@ const sendCommissionPaymentEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.COMMISSION_PAYMENT,
       email: toEmail,
       message: `Nueva comision detectada hacia el usuario: ${toEmail}`,
+      message_ui: MESSAGE_UI.COMMISSION_PAYMENT,
       amount: commissionAmount,
     });
 
@@ -296,6 +315,7 @@ const sendSavingsCreationEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.NEW_SAVING,
       email: toEmail,
       message: `Confirmacion de nuevo ahorro en el correo: ${toEmail}`,
+      message_ui: MESSAGE_UI.NEW_SAVING,
       amount: amount,
     });
 
@@ -347,6 +367,7 @@ const sendNewAffiliateEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.NEW_AFFILIATE,
       email: toEmail,
       message: `${affiliateEmail} es un afiliado directo de ${toEmail}`,
+      message_ui: MESSAGE_UI.NEW_AFFILIATE(affiliateName),
       amount: null,
     });
 
@@ -354,6 +375,7 @@ const sendNewAffiliateEmail = async (req, res) => {
 
     res.status(200).json({ message: "Email sent successfully and notification saved." });
   } catch (error) {
+    
     console.error("Error sending email: ", error);
     res.status(500).json({ message: "Error sending email" });
   }
