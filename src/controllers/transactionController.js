@@ -104,25 +104,45 @@ const createTransaction = async (req, res) => {
   }
 };
 
-const getTransactionById = async (req, res) => {
-  const { id } = req.params;
-
+const getTransactionAndBalanceById = async (req, res) => {
+  
   try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "El atributo 'id' es obligatorio." });
+    }
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
 
-    const transactions = await Transaction.find({ userId: id });
+    const page = parseInt(req.body.page) || 1;
+    const limit = parseInt(req.body.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const transactions = await Transaction.find({ userId: id })
+      .skip(skip)
+      .limit(limit)
+      .sort({ date: -1 });
+
+    const totalTransactions = await Notification.countDocuments({ userId: id });
+    
     if (!transactions || transactions.length === 0) {
       return res.status(404).json({ message: "No se encontraron transacciones para este usuario." });
     }
 
-    return res.status(200).json({ transactions, balance: user.totalBalance });
+    return res.status(200).json({
+      total: totalTransactions,
+      page,
+      pages: Math.ceil(totalTransactions / limit), 
+      transactions, 
+      balance: user.totalBalance 
+    });
   } catch (error) {
-    console.error("Error al obtener transacciones:", error);
+    console.error("Error al obtener transacciones y balance:", error);
     return res.status(500).json({ error: "Ocurrió un error en el servidor." });
   }
 };
 
-module.exports = { createTransaction, getGroupedTransactions, getTransactionById };
+module.exports = { createTransaction, getGroupedTransactions, getTransactionAndBalanceById };
