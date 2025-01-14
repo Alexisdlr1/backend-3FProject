@@ -5,6 +5,8 @@ const Notification = require("../models/notificationModel");
 
 // Parche para comisiones
 const PATCH_COMMISSION = Object.freeze({
+  MEMBERSHIP_COMMISSION_TO_BUSSINESS: 400,
+  MEMBERSHIP_COMMISSION_TO_UPLINE: 100,
   FIRST_LEVEL: 4,
   SECOND_LEVEL: 2,
   THIRT_LEVEL: 2,
@@ -299,6 +301,96 @@ const sendCommissionPaymentEmail = async (req, res) => {
     res.status(500).json({ message: "Error sending commission payment email." });
   }
 };
+//First saving
+const sendFirstSavingCreationEmail = async (req, res) => {
+  const { toEmail, amount, walletFirstLevel, walletSecondLevel, walletThirtLevel } = req.body;
+
+  if (!toEmail || !amount) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+  try {
+
+    // TODO... MAIL FOR MEMBERSHIP NOTIFICATION ADMIN
+
+    // COMMISION FOR FIRS UPLINE
+    if (walletFirstLevel) {
+      const membershipCommissionToUpline = PATCH_COMMISSION.MEMBERSHIP_COMMISSION_TO_UPLINE;
+      const user = await User.findOne({ wallet: walletFirstLevel });
+      if (user) {
+        const toEmail = user.email;
+        const userName = user.name;
+
+        // Email settings
+        const msg = {
+          to: toEmail,
+          from: "admin+friends@steamhub.com.mx",
+          templateId: "d-160f146d203d46658d9f2fc03b2a1f8b",
+          dynamic_template_data: {
+            user_name: userName,
+            commission_date: new Date().toISOString().split("T")[0],
+            commission_amount: membershipCommissionToUpline,
+          },
+        };
+
+        await sgMail.send(msg);
+
+        // Save the notification event in DB
+        const notification = new Notification({
+          type: NOTIFICATION_TYPES.COMMISSION_PAYMENT,
+          email: toEmail,
+          message: `Nueva comision detectada hacia el usuario: ${toEmail}`,
+          message_ui: MESSAGE_UI.COMMISSION_PAYMENT,
+          amount: membershipCommissionToUpline,
+        });
+
+        await notification.save();
+      }
+    }
+
+    // Enviar correo para notificar nuevo ahorro
+    const msg = {
+      to: toEmail,
+      from: "admin+friends@steamhub.com.mx",
+      templateId: "d-7225783fdc954bc799c276271400bac4",
+      dynamic_template_data: {
+        email: toEmail,
+        amount: amount,
+        creation_date: new Date().toISOString().split("T")[0],
+      },
+    };
+
+    await sgMail.send(msg);
+
+    // Guardar la notificación en la base de datos
+    const notification = new Notification({
+      type: NOTIFICATION_TYPES.NEW_SAVING,
+      email: toEmail,
+      message: `Confirmacion de nuevo ahorro en el correo: ${toEmail}`,
+      message_ui: MESSAGE_UI.NEW_SAVING,
+      amount: amount,
+    });
+
+    await notification.save();
+
+    // Parche para envio de correos y notificaciones para comisiones
+    if (walletFirstLevel) {
+      const commissionAmountFirstLevel = parseFloat(amount) * PATCH_COMMISSION.FIRST_LEVEL / 100;
+      await patchCommisionPaymentEmail(walletFirstLevel, commissionAmountFirstLevel.toString())
+    }
+    if (walletSecondLevel) {
+      const commissionAmountSecondLevel = parseFloat(amount) * PATCH_COMMISSION.SECOND_LEVEL / 100;
+      await patchCommisionPaymentEmail(walletFirstLevel, commissionAmountSecondLevel.toString())
+    }
+    if (walletThirtLevel) {
+      const commissionAmountThirtLevel = parseFloat(amount) * PATCH_COMMISSION.THIRT_LEVEL / 100;
+      await patchCommisionPaymentEmail(walletFirstLevel, commissionAmountThirtLevel.toString())
+    }
+    
+    res.status(200).json({ message: "Saving email sent and notification saved." });
+  } catch (error) {
+
+  }
+};
 
 //Saving
 const sendSavingsCreationEmail = async (req, res) => {
@@ -354,6 +446,7 @@ const sendSavingsCreationEmail = async (req, res) => {
     res.status(500).json({ message: "Error sending saving email." });
   }
 };
+
 // Solucion para envio de email y notificaciones 
 const patchCommisionPaymentEmail = async (wallet, commissionAmount) => {
   try {
@@ -389,13 +482,11 @@ const patchCommisionPaymentEmail = async (wallet, commissionAmount) => {
     });
 
     await notification.save();
-
-    res.status(200).json({ message: "Commission payment email sent and notification saved." });
   } catch (e) {
     console.error("Error sending commission payment email: ", e);
-    res.status(500).json({ message: "Error sending commission payment email." });
+    throw e;
   }
-}
+};
 
 // Affiliate
 const sendNewAffiliateEmail = async (req, res) => {
@@ -444,7 +535,7 @@ const sendNewAffiliateEmail = async (req, res) => {
 
     res.status(200).json({ message: "Email sent successfully and notification saved." });
   } catch (error) {
-    
+
     console.error("Error sending email: ", error);
     res.status(500).json({ message: "Error sending email" });
   }
