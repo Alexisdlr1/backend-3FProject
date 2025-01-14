@@ -30,9 +30,6 @@ const MESSAGE_UI = Object.freeze({
   PULL_PAYMENT: "Has recibido un nuevo pago del pull.",
   NEW_SAVING: "¡Has iniciado un nuevo ahorro, sigue así!",
   COMMISSION_PAYMENT: "¡Has recibido una nueva comisión, Felicidades!",
-  NEW_AFFILIATE: (affiliateName) => {
-    return `${affiliateName} es ahora afiliado tuyo`;
-  },
 })
 
 // Configurar la API Key de SendGrid
@@ -439,7 +436,7 @@ const sendNewAffiliateEmail = async (req, res) => {
       type: NOTIFICATION_TYPES.NEW_AFFILIATE,
       email: toEmail,
       message: `${affiliateEmail} es un afiliado directo de ${toEmail}`,
-      message_ui: MESSAGE_UI.NEW_AFFILIATE(affiliateName),
+      message_ui: `${affiliateName} es ahora afiliado tuyo`,
       amount: null,
     });
 
