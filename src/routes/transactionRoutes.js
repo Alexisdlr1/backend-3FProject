@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/", getGroupedTransactions);
 
 // Ruta para obtener las transacciones y balance por id
-router.post("/:id", getTransactionAndBalanceById);
+router.get("/:id", getTransactionAndBalanceById);
 
 // Ruta para crear una transacción
 router.post("/", createTransaction);
