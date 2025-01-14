@@ -1,4 +1,4 @@
-export function getDateForPYT(inputDate) {
+function getDateForPYT(inputDate) {
     // Si el input es un string, lo convertimos a objeto Date
     const date = inputDate instanceof Date ? inputDate : new Date(inputDate);
 
@@ -29,7 +29,7 @@ export function getDateForPYT(inputDate) {
     return resultDate;
 }
 
-export function getDateForCommission(inputDate) {
+function getDateForCommission(inputDate) {
     // Si el input es un string, lo convertimos a objeto Date
     const date = inputDate instanceof Date ? inputDate : new Date(inputDate);
 
@@ -45,3 +45,5 @@ export function getDateForCommission(inputDate) {
 
     return resultDate;
 }
+
+module.exports = { getDateForPYT, getDateForCommission };

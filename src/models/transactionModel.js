@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-import { getDateForPYT, getDateForCommission } from "../utils/timestamp";
+const { getDateForPYT, getDateForCommission } = require("../utils/timestamp");
 
 
 const PyTSchema = new mongoose.Schema({
