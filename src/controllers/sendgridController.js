@@ -312,7 +312,7 @@ const sendSavingsCreationEmail = async (req, res) => {
 
   try {
 
-    // COMMISION FOR FIRS UPLINE
+    // COMMISION FOR FIRST UPLINE
     if (walletFirstLevel && isFirstSaving) {
       const membershipCommissionToUpline = PATCH_COMMISSION.MEMBERSHIP_COMMISSION_TO_UPLINE;
       patchCommisionPaymentEmail(walletFirstLevel, membershipCommissionToUpline);
@@ -350,11 +350,11 @@ const sendSavingsCreationEmail = async (req, res) => {
     }
     if (walletSecondLevel) {
       const commissionAmountSecondLevel = parseFloat(amount) * PATCH_COMMISSION.SECOND_LEVEL / 100;
-      await patchCommisionPaymentEmail(walletFirstLevel, commissionAmountSecondLevel.toString())
+      await patchCommisionPaymentEmail(walletSecondLevel, commissionAmountSecondLevel.toString())
     }
     if (walletThirtLevel) {
       const commissionAmountThirtLevel = parseFloat(amount) * PATCH_COMMISSION.THIRT_LEVEL / 100;
-      await patchCommisionPaymentEmail(walletFirstLevel, commissionAmountThirtLevel.toString())
+      await patchCommisionPaymentEmail(walletThirtLevel, commissionAmountThirtLevel.toString())
     }
 
     res.status(200).json({ message: "Saving email sent and notification saved." });
