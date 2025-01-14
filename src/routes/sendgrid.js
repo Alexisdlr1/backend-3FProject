@@ -3,7 +3,7 @@ const { sendUserRegistrationEmail,
     sendWhitelistActivationEmail,
     sendPasswordResetRequestEmail,
     sendPasswordChangeConfirmationEmail,
-    sendPulllPaymentEmail,
+    sendPullPaymentEmail,
     sendCommissionPaymentEmail,
     sendSavingsCreationEmail,
     sendNewAffiliateEmail, } = require("../controllers/sendgridController");
@@ -23,7 +23,7 @@ router.post("/resetPassword", sendPasswordResetRequestEmail);
 router.post("/passwordConfirmation", sendPasswordChangeConfirmationEmail);
 
 // Ruta para enviar el correo de pull
-router.post("/pull", sendPulllPaymentEmail);
+router.post("/pull", sendPullPaymentEmail);
 
 // Ruta para enviar el correo de comission
 router.post("/comission", sendCommissionPaymentEmail);

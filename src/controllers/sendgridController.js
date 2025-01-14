@@ -206,7 +206,7 @@ const sendPasswordChangeConfirmationEmail = async (req, res) => {
 };
 
 // Pull
-const sendPulllPaymentEmail = async (req, res) => {
+const sendPullPaymentEmail = async (req, res) => {
   const { toEmail, userName, amount } = req.body;
 
   if (!toEmail || !userName || !amount) {
@@ -249,13 +249,21 @@ const sendPulllPaymentEmail = async (req, res) => {
 
 // Commissions
 const sendCommissionPaymentEmail = async (req, res) => {
-  const { toEmail, userName, commissionAmount } = req.body;
+  const { wallet, commissionAmount } = req.body;
 
-  if (!toEmail || !userName || !commissionAmount) {
+  if (!wallet || !commissionAmount) {
     return res.status(400).json({ message: "Missing required fields." });
   }
 
   try {
+    const user = await User.findOne({ wallet });
+    if (!user) {
+      return res.status(404).json({ message: "El correo no está registrado." });
+    }
+
+    const toEmail = user.email;
+    const userName = user.name;
+
     // Email settings
     const msg = {
       to: toEmail,
@@ -386,7 +394,7 @@ module.exports = {
   sendWhitelistActivationEmail,
   sendPasswordResetRequestEmail,
   sendPasswordChangeConfirmationEmail,
-  sendPulllPaymentEmail,
+  sendPullPaymentEmail,
   sendCommissionPaymentEmail,
   sendSavingsCreationEmail,
   sendNewAffiliateEmail,
