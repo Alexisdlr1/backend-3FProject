@@ -119,12 +119,12 @@ const getTransactionAndBalanceById = async (req, res) => {
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    // const skip = (page - 1) * limit;
 
-    const transactions = await Transaction.find({ userId: id })
-      .skip(skip)
-      .limit(limit)
-      .sort({ date: -1 });
+    const transactions = await Transaction.find({ userId: id });
+      // .skip(skip)
+      // .limit(limit)
+      // .sort({ date: -1 });
 
     const totalTransactions = await Notification.countDocuments({ userId: id });
     

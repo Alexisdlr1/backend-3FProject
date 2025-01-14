@@ -64,7 +64,7 @@ transactionSchema.pre('save', function(next) {
             
             // Generamos los 3 PyT
             for (let i = 0; i < 3; i++) {
-                const paymentDay = i === 0 ? currentDate : getDateForPYT(currentDate);
+                const paymentDay = getDateForPYT(currentDate);
                 
                 pytArray.push({
                     paymentDay: paymentDay,
