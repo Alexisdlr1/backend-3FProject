@@ -18,8 +18,8 @@ function getDateForPYT(inputDate) {
 
     // Aplicamos las reglas de negocio:
     if (dayOfMonth >= 1 && dayOfMonth <= 15) {
-        // Si el día está entre 1 y 15, ajustamos al día 15 del mes resultante
-        resultDate.setDate(15);
+        // Si el día está entre 1 y 15, ajustamos al día 16 del mes resultante
+        resultDate.setDate(16);
     } else {
         // Si el día está entre 16 y fin de mes, ajustamos al primer día del mes siguiente
         resultDate.setMonth(resultDate.getMonth() + 1);
