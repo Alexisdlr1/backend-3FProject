@@ -369,7 +369,7 @@ const patchCommisionPaymentEmail = async (wallet, commissionAmount) => {
   try {
     const user = await User.findOne({ wallet });
     if (!user) {
-      return res.status(404).json({ message: "El correo no está registrado." });
+      throw new Error("El correo no está registrado.");
     }
 
     const toEmail = user.email;
