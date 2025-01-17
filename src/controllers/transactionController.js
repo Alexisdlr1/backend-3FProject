@@ -98,8 +98,12 @@ const createTransaction = async (req, res) => {
             return res.status(400).json({ error: "El monto del ahorro no puedo ser registrado." });
         }
 
+        // Acutaliza el monto para balance
+        const currentMemberBalance = parseFloat(user.totalBalance);
+        const newMemberBalance = currentMemberBalance + parseFloat(finalAmount);
+
         // Actualiza el balance de los ahorros totales de cada miembro
-        user.totalBalance += finalAmount;
+        user.totalBalance = newMemberBalance;
 
         // Guardar el usuario actualizado
         await user.save();

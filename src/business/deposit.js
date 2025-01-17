@@ -45,8 +45,12 @@ const depositMembershipToBusiness = async (membershipAmount) => {
       throw new Error("No se encuentra cuenta de negocio");
     }
 
+    // Update amount
+    const currentMembershipReceived = parseFloat(business.membershipsReceived);
+    const newMembershipReceived = currentMembershipReceived + membership;
+
     // Update memberships balance
-    business.membershipsReceived += membership;
+    business.membershipsReceived = newMembershipReceived;
 
     // Save business data
     await business.save();
@@ -82,11 +86,19 @@ const depositSavingToBusiness = async (amount) => {
     // Update savings counter
     business.activeSavingsAccounts++;
 
+    // Update amount for active savings balance
+    const currentActiveSavingsBalance = parseFloat(business.activeSavingsBalance);
+    const newActiveSavingsBalance = currentActiveSavingsBalance + deposit;
+
     // Update savings balance for business
-    business.activeSavingsBalance += deposit;
+    business.activeSavingsBalance = newActiveSavingsBalance;
+
+    // Update amount for net savings balance
+    const currentTotalNetSavingsBalance = parseFloat(business.totalNetSavingsBalance);
+    const newTotalNetSavingsBalance = currentTotalNetSavingsBalance + netDeposit;
 
     // Update net savings balance for business
-    business.totalNetSavingsBalance += netDeposit;
+    business.totalNetSavingsBalance = newTotalNetSavingsBalance;
 
     // Save business data
     await business.save();
