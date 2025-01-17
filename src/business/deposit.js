@@ -1,6 +1,15 @@
+const { default: mongoose } = require("mongoose");
 const Business = require("../models/businessModel");
 
 const BUSINESS_ID = process.env.BUSINESS_ID;
+
+const BUSINESS_NET_DISTRIBUTION = Object.freeze({
+  MEMBERSHIP_COMMISSION_TO_BUSSINESS: 400,
+  MEMBERSHIP_COMMISSION_TO_UPLINE: 100,
+  FIRST_LEVEL: 4,
+  SECOND_LEVEL: 2,
+  THIRT_LEVEL: 2,
+})
 
 /**
  * Core functions for business model
@@ -9,10 +18,18 @@ const BUSINESS_ID = process.env.BUSINESS_ID;
  * @param {*} membershipAmount si the membership amount for business account in DB
  * @this function returns true if the process is successful or returns false if any error is detected
  */
+const calculateNetDeposit = (amount) => {
+  const TOTAL_NET_PERCENT = 100;
+
+  const NET_COMMISSIONS_PERCENT = BUSINESS_NET_DISTRIBUTION.FIRST_LEVEL + BUSINESS_NET_DISTRIBUTION.SECOND_LEVEL + BUSINESS_NET_DISTRIBUTION.THIRT_LEVEL;
+  const NET_DEPOSIT_PERCENT = TOTAL_NET_PERCENT - NET_COMMISSIONS_PERCENT;
+  return parseFloat(amount) * NET_DEPOSIT_PERCENT / TOTAL_NET_PERCENT;
+}
+
 const depositMembershipToBusiness = async (membershipAmount) => {
   const membership = parseFloat(membershipAmount);
 
-  if (membership > 0) {
+  if (membership <= 0) {
     return false;
   }
 
@@ -44,8 +61,9 @@ const depositMembershipToBusiness = async (membershipAmount) => {
 
 const depositSavingToBusiness = async (amount) => {
   const deposit = parseFloat(amount);
+  const netDeposit = calculateNetDeposit(amount);
 
-  if (deposit > 0) {
+  if (deposit <= 0) {
     return false;
   }
 
@@ -65,7 +83,10 @@ const depositSavingToBusiness = async (amount) => {
     business.activeSavingsAccounts++;
 
     // Update savings balance for business
-    business.activeSavingsBalance += amount;
+    business.activeSavingsBalance += deposit;
+
+    // Update net savings balance for business
+    business.totalNetSavingsBalance += netDeposit;
 
     // Save business data
     await business.save();

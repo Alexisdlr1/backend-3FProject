@@ -4,7 +4,12 @@ const { getDateForPYT, getDateForCommission } = require("../utils/timestamp");
 
 const PyTSchema = new mongoose.Schema({
     paymentDay: { type: Date, required: true },
-    amount: { type: Number, required: true },
+    amount: { 
+        type: mongoose.Schema.Types.Decimal128,
+        default: 0,
+        get: v => v ? v.toString() : v,
+        required: true,
+    },
     isPaid: { type: Boolean, default: false },
     status: { 
         type: String,
@@ -19,7 +24,11 @@ const PyTSchema = new mongoose.Schema({
 
 const CommissionSchema = new mongoose.Schema({
     paymentDay: { type: Date},
-    amount: { type: Number, default: 0 },
+    amount: { 
+        type: mongoose.Schema.Types.Decimal128,
+        default: 0,
+        get: v => v ? v.toString() : v
+    },
     activeCommissions: { type: Boolean, default: false },
     status: { 
         type: String,
@@ -34,7 +43,12 @@ const CommissionSchema = new mongoose.Schema({
 
 const transactionSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    amount: { type: Number, required: true },
+    amount: { 
+        type: mongoose.Schema.Types.Decimal128,
+        default: 0,
+        get: v => v ? v.toString() : v,
+        required: true,
+     },
     date: { type: Date, default: Date.now },
     pyt:[PyTSchema],
     commissions: CommissionSchema,
