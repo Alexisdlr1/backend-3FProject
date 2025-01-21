@@ -12,6 +12,8 @@ const PATCH_COMMISSION = Object.freeze({
   THIRT_LEVEL: 2,
 })
 
+const SENDGRID_MAIL = "notificaciones@freefriendsandfamily.vip"
+
 // Tipo de notificacion
 const NOTIFICATION_TYPES = Object.freeze({
   REGISTRATION: "REGISTRATION",
@@ -48,7 +50,7 @@ const sendUserRegistrationEmail = async (req, res) => {
   try {
     const msg = {
       to: toEmail,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-a72486c2321a4d6b980cd4b621fc0553",
       dynamic_template_data: {
         user_name: userName,
@@ -88,7 +90,7 @@ const sendWhitelistActivationEmail = async (req, res) => {
   try {
     const msg = {
       to: toEmail,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-a31c9812c2404a8085cb6c078caeaaaa",
       dynamic_template_data: {
         user_email: userEmail,
@@ -143,7 +145,7 @@ const sendPasswordResetRequestEmail = async (req, res) => {
     // Enviar correo con el enlace
     const msg = {
       to: email,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-cbc2dfa545a847c09e67d1c5b8288b7a",
       dynamic_template_data: {
         user_name: user.name,
@@ -183,7 +185,7 @@ const sendPasswordChangeConfirmationEmail = async (req, res) => {
     // Configurar y enviar el correo
     const msg = {
       to: toEmail,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-d6e7c8f65f5c48e895cc2a026798f62f",
       dynamic_template_data: {
         email: toEmail,
@@ -222,7 +224,7 @@ const sendPullPaymentEmail = async (req, res) => {
   try {
     const msg = {
       to: toEmail,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-517f77e6daf445a796e37b98a4316794",
       dynamic_template_data: {
         user_name: userName,
@@ -273,7 +275,7 @@ const sendCommissionPaymentEmail = async (req, res) => {
     // Email settings
     const msg = {
       to: toEmail,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-160f146d203d46658d9f2fc03b2a1f8b",
       dynamic_template_data: {
         user_name: userName,
@@ -321,7 +323,7 @@ const sendSavingsCreationEmail = async (req, res) => {
     // Enviar correo para notificar nuevo ahorro
     const msg = {
       to: toEmail,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-7225783fdc954bc799c276271400bac4",
       dynamic_template_data: {
         email: toEmail,
@@ -378,7 +380,7 @@ const patchCommisionPaymentEmail = async (wallet, commissionAmount) => {
     // Email settings
     const msg = {
       to: toEmail,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-160f146d203d46658d9f2fc03b2a1f8b",
       dynamic_template_data: {
         user_name: userName,
@@ -428,7 +430,7 @@ const sendNewAffiliateEmail = async (req, res) => {
   try {
     const msg = {
       to: toEmail,
-      from: "admin+friends@steamhub.com.mx",
+      from: SENDGRID_MAIL,
       templateId: "d-70b346a15c604fb1b56549abbf938033",
       dynamic_template_data: {
         user_name: userName,
