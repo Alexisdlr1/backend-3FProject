@@ -262,7 +262,7 @@ const sendSavingsCreationEmail = async (req, res) => {
 
     // COMMISION FOR FIRST UPLINE
     if (walletUplines[0] && isFirstSaving) {
-      patchCommisionPaymentEmail(uplineFirstLevel, MEMBERSHIP_COMMISSION.TO_UPLINE);
+      patchCommisionPaymentEmail(walletUplines[0], MEMBERSHIP_COMMISSION.TO_UPLINE);
     }
 
     // Enviar correo para notificar nuevo ahorro
