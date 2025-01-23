@@ -185,7 +185,7 @@ const mongoose = require("mongoose");
       let currentReferrer = referrer; // Empieza con el referido inmediato
       for (let i = 0; i < 3; i++) { // 3 niveles
         if (!currentReferrer) break;
-        uplineCommisions.unshift(currentReferrer.wallet); // Agrega el nivel más cercano al inicio del arreglo
+        uplineCommisions.push(currentReferrer.wallet); // Agrega el nivel más cercano al final del arreglo
         currentReferrer = await User.findOne({ wallet: currentReferrer.referred_by }); // Busca el siguiente nivel
       }
 
@@ -300,7 +300,7 @@ const mongoose = require("mongoose");
 
         // Buscar si ya existe un usuario con la misma wallet
         const existingUser = await User.findOne({ wallet });
-        console.log("usuario encontrado: ", existingUser); // test
+        
         if (existingUser) {
             return res.status(200).json({ exists: true, message: "La wallet ya está registrada." });
         }
