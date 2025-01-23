@@ -1,11 +1,8 @@
-const { default: mongoose } = require("mongoose");
 const Business = require("../models/businessModel");
 
 const BUSINESS_ID = process.env.BUSINESS_ID;
 
 const BUSINESS_NET_DISTRIBUTION = Object.freeze({
-  MEMBERSHIP_COMMISSION_TO_BUSSINESS: 400,
-  MEMBERSHIP_COMMISSION_TO_UPLINE: 100,
   FIRST_LEVEL: 4,
   SECOND_LEVEL: 2,
   THIRT_LEVEL: 2,

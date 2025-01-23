@@ -2,15 +2,21 @@ const crypto = require("crypto");
 const User = require("../models/userModel");
 const sgMail = require("@sendgrid/mail");
 const Notification = require("../models/notificationModel");
-const { NOTIFICATION_TYPES, MESSAGE_UI } = require("../utils/notification")
+const { getCommissionsPerSaving } = require("../business/commission");
+const { 
+  createRegistrationNotification,
+  createWhitelistNotification,
+  createPasswordResetNotification,
+  createChangePasswordNotification,
+  createPullPaymentNotification,
+  createCommissionNotification,
+  createNewSavingNotification,
+} = require("../utils/notification")
 
 // Parche para comisiones
-const PATCH_COMMISSION = Object.freeze({
-  MEMBERSHIP_COMMISSION_TO_BUSSINESS: 400,
-  MEMBERSHIP_COMMISSION_TO_UPLINE: 100,
-  FIRST_LEVEL: 4,
-  SECOND_LEVEL: 2,
-  THIRT_LEVEL: 2,
+const MEMBERSHIP_COMMISSION = Object.freeze({
+  TO_BUSSINESS: 400,
+  TO_UPLINE: 100,
 })
 
 const SENDGRID_MAIL = "notificaciones@freefriendsandfamily.vip"
@@ -41,15 +47,7 @@ const sendUserRegistrationEmail = async (req, res) => {
     await sgMail.send(msg);
 
     // Crear una notificación en la base de datos
-    const notification = new Notification({
-      type: NOTIFICATION_TYPES.REGISTRATION,
-      email: toEmail,
-      message: `Email: ${toEmail} registrado con exito`,
-      message_ui: MESSAGE_UI.REGISTRATION,
-      amount: null,
-    });
-
-    await notification.save();
+    await createRegistrationNotification(toEmail);
 
     res.status(200).json({ message: "Email sent successfully and notification saved." });
   } catch (error) {
@@ -81,15 +79,7 @@ const sendWhitelistActivationEmail = async (req, res) => {
     await sgMail.send(msg);
 
     // Crear una notificación en la base de datos
-    const notification = new Notification({
-      type: NOTIFICATION_TYPES.WHITELIST,
-      email: toEmail,
-      message: `Email: ${toEmail} añadido a la WhiteList`,
-      message_ui: MESSAGE_UI.WHITELIST,
-      amount: null,
-    });
-
-    await notification.save();
+    await createWhitelistNotification(toEmail);
 
     res.status(200).json({ message: "Email sent successfully and notification saved." });
   } catch (error) {
@@ -135,15 +125,7 @@ const sendPasswordResetRequestEmail = async (req, res) => {
     await sgMail.send(msg);
 
     // Crear una notificación en la base de datos
-    const notification = new Notification({
-      type: NOTIFICATION_TYPES.RESET_PASSWORD,
-      email: email,
-      message: `El usuario: ${user.name} solicito cambio de contraseña`,
-      message_ui: MESSAGE_UI.RESET_PASSWORD,
-      amount: null,
-    });
-
-    await notification.save();
+    await createPasswordResetNotification(email, user.name);
 
     res.status(200).json({ message: "Correo de restablecimiento enviado con éxito." });
   } catch (error) {
@@ -175,15 +157,7 @@ const sendPasswordChangeConfirmationEmail = async (req, res) => {
     await sgMail.send(msg);
 
     // Guardar la notificación en la base de datos
-    const notification = new Notification({
-      type: NOTIFICATION_TYPES.CHANGE_PASSWORD,
-      email: toEmail,
-      message: `Confirmacion de cambio de contraseña al correo ${toEmail}`,
-      message_ui: MESSAGE_UI.CHANGE_PASSWORD,
-      amount: null,
-    });
-
-    await notification.save();
+    await createChangePasswordNotification(toEmail);
 
     res.status(200).json({ message: "Password confirmation email sent and notification saved." });
   } catch (error) {
@@ -215,15 +189,7 @@ const sendPullPaymentEmail = async (req, res) => {
     await sgMail.send(msg);
 
     // Save the notification event in DB
-    const notification = new Notification({
-      type: NOTIFICATION_TYPES.PULL_PAYMENT,
-      email: toEmail,
-      message: `Nueva comision detectada hacia el usuario: ${toEmail}`,
-      message_ui: MESSAGE_UI.PULL_PAYMENT,
-      amount: commissionAmount,
-    });
-
-    await notification.save();
+    await createPullPaymentNotification(toEmail, amount);
 
     res.status(200).json({ message: "Pull payment email sent and notification saved." });
   } catch (error) {
@@ -266,15 +232,7 @@ const sendCommissionPaymentEmail = async (req, res) => {
     await sgMail.send(msg);
 
     // Save the notification event in DB
-    const notification = new Notification({
-      type: NOTIFICATION_TYPES.COMMISSION_PAYMENT,
-      email: toEmail,
-      message: `Nueva comision detectada hacia el usuario: ${toEmail}`,
-      message_ui: MESSAGE_UI.COMMISSION_PAYMENT,
-      amount: commissionAmount,
-    });
-
-    await notification.save();
+    await createCommissionNotification(toEmail, commissionAmount);
 
     res.status(200).json({ message: "Commission payment email sent and notification saved." });
   } catch (e) {
@@ -285,27 +243,35 @@ const sendCommissionPaymentEmail = async (req, res) => {
 
 //Saving
 const sendSavingsCreationEmail = async (req, res) => {
-  const { toEmail, amount, walletFirstLevel, walletSecondLevel, walletThirtLevel, isFirstSaving } = req.body;
+  const { userId, amount, isFirstSaving } = req.body;
 
-  if (!toEmail || !amount) {
+  if (!userId || !amount) {
     return res.status(400).json({ message: "Missing required fields." });
   }
 
   try {
 
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+
+    const walletUplines = user.uplineCommisions;
+    const userEmail = user.email;
+    const commissions = getCommissionsPerSaving(amount);
+
     // COMMISION FOR FIRST UPLINE
-    if (walletFirstLevel && isFirstSaving) {
-      const membershipCommissionToUpline = PATCH_COMMISSION.MEMBERSHIP_COMMISSION_TO_UPLINE;
-      patchCommisionPaymentEmail(walletFirstLevel, membershipCommissionToUpline);
+    if (walletUplines[0] && isFirstSaving) {
+      patchCommisionPaymentEmail(uplineFirstLevel, MEMBERSHIP_COMMISSION.TO_UPLINE);
     }
 
     // Enviar correo para notificar nuevo ahorro
     const msg = {
-      to: toEmail,
+      to: userEmail,
       from: SENDGRID_MAIL,
       templateId: "d-7225783fdc954bc799c276271400bac4",
       dynamic_template_data: {
-        email: toEmail,
+        email: userEmail,
         amount: amount,
         creation_date: new Date().toISOString().split("T")[0],
       },
@@ -314,31 +280,16 @@ const sendSavingsCreationEmail = async (req, res) => {
     await sgMail.send(msg);
 
     // Guardar la notificación en la base de datos
-    const notification = new Notification({
-      type: NOTIFICATION_TYPES.NEW_SAVING,
-      email: toEmail,
-      message: `Confirmacion de nuevo ahorro en el correo: ${toEmail}`,
-      message_ui: MESSAGE_UI.NEW_SAVING,
-      amount: amount,
-    });
+    await createNewSavingNotification(userEmail, amount);
 
-    await notification.save();
+    // Parche para envio de correos
+    for (let i = 0; i < 3; i++) {
+      if (!walletUplines[i]) break;
+      await patchCommisionPaymentEmail(walletUplines[i], commissions[i])
+    }
+    
 
-    // Parche para envio de correos y notificaciones para comisiones
-    if (walletFirstLevel) {
-      const commissionAmountFirstLevel = parseFloat(amount) * PATCH_COMMISSION.FIRST_LEVEL / 100;
-      await patchCommisionPaymentEmail(walletFirstLevel, commissionAmountFirstLevel.toString())
-    }
-    if (walletSecondLevel) {
-      const commissionAmountSecondLevel = parseFloat(amount) * PATCH_COMMISSION.SECOND_LEVEL / 100;
-      await patchCommisionPaymentEmail(walletSecondLevel, commissionAmountSecondLevel.toString())
-    }
-    if (walletThirtLevel) {
-      const commissionAmountThirtLevel = parseFloat(amount) * PATCH_COMMISSION.THIRT_LEVEL / 100;
-      await patchCommisionPaymentEmail(walletThirtLevel, commissionAmountThirtLevel.toString())
-    }
-
-    res.status(200).json({ message: "Saving email sent and notification saved." });
+    res.status(200).json({ message: "Saving email sent." });
   } catch (error) {
     console.error("Error sending saving email: ", error);
     res.status(500).json({ message: "Error sending saving email." });
@@ -349,9 +300,7 @@ const sendSavingsCreationEmail = async (req, res) => {
 const patchCommisionPaymentEmail = async (wallet, commissionAmount) => {
   try {
     const user = await User.findOne({ wallet });
-    if (!user) {
-      throw new Error("El correo no está registrado.");
-    }
+    if (!user) return;
 
     const toEmail = user.email;
     const userName = user.name;
@@ -370,19 +319,8 @@ const patchCommisionPaymentEmail = async (wallet, commissionAmount) => {
 
     await sgMail.send(msg);
 
-    // Save the notification event in DB
-    const notification = new Notification({
-      type: NOTIFICATION_TYPES.COMMISSION_PAYMENT,
-      email: toEmail,
-      message: `Nueva comision detectada hacia el usuario: ${toEmail}`,
-      message_ui: MESSAGE_UI.COMMISSION_PAYMENT,
-      amount: commissionAmount,
-    });
-
-    await notification.save();
   } catch (e) {
     console.error("Error sending commission payment email: ", e);
-    throw e;
   }
 };
 
@@ -431,7 +369,7 @@ const sendNewAffiliateEmail = async (req, res) => {
 
     await notification.save();
 
-    res.status(200).json({ message: "Email sent successfully and notification saved." });
+    res.status(200).json({ message: "Email sent successfully." });
   } catch (error) {
 
     console.error("Error sending email: ", error);

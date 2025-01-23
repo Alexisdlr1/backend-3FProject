@@ -1,6 +1,12 @@
 const Transaction = require("../models/transactionModel");
 const User = require("../models/userModel");
+const { getCommissionsPerSaving } = require("../business/commission");
 const { depositMembershipToBusiness, depositSavingToBusiness } = require("../business/deposit");
+const { 
+    createMembershipPaymentNotification,
+    createNewSavingNotification,
+    createCommissionNotification,
+} = require("../utils/notification");
 
 // Ruta para obtener las transacciones agrupadas por usuario
 const getGroupedTransactions = async (req, res) => {
@@ -63,6 +69,8 @@ const createTransaction = async (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado." });
         }
 
+        const userEmail = user.email;
+        const uplines = user.uplineCommisions
         let finalAmount = amount;
 
         // Verificar que el monto no sea negativo
@@ -89,6 +97,9 @@ const createTransaction = async (req, res) => {
 
             // Actualiza el campo membership si esta correcto
             user.membership = MEMBERSHIP_AMOUNT;
+
+            // Emite notificacion
+            await createMembershipPaymentNotification(userEmail);
         }
 
         // Actualiza el balance de ahorros activos en el negocio
@@ -105,8 +116,31 @@ const createTransaction = async (req, res) => {
         // Actualiza el balance de los ahorros totales de cada miembro
         user.totalBalance = newMemberBalance;
 
+        //Emite notificacion
+        await createNewSavingNotification(userEmail, finalAmount);
+
         // Guardar el usuario actualizado
         await user.save();
+
+        // Obtener valor de comisiones
+        const commissions = getCommissionsPerSaving(finalAmount);
+
+        // Emite notificaciones para referidos
+        for (let i = 0; i < 3; i++) {
+            // verifica que exista una direccion
+            if (!uplines[i]) break;
+
+            // si existe busca a un usuario
+            const user = await User.findOne({ wallet: uplines[i] });
+            
+            // en caso de no existir continua
+            if (!user) continue;
+
+            const userEmail = user.email;
+
+            // Emite una nueva notificacion para comision
+            await createCommissionNotification(userEmail, commissions[i]);
+        }
 
         const transaction = new Transaction({
             userId,
