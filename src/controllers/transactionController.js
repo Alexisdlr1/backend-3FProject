@@ -99,7 +99,7 @@ const createTransaction = async (req, res) => {
             user.membership = MEMBERSHIP_AMOUNT;
 
             // Emite notificacion
-            await createMembershipPaymentNotification(userEmail);
+            await createMembershipPaymentNotification(userEmail, MEMBERSHIP_AMOUNT);
         }
 
         // Actualiza el balance de ahorros activos en el negocio

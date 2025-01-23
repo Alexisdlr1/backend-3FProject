@@ -46,14 +46,14 @@ const createRegistrationNotification = async (toEmail) => {
   }
 }
 
-const createMembershipPaymentNotification = async (toEmail) => {
+const createMembershipPaymentNotification = async (toEmail, membershipAmount) => {
   try {
     const notification = new Notification({
       type: NOTIFICATION_TYPES.MEMBERSHIP_PAYMENT,
       email: toEmail,
       message: `Email: ${toEmail} ha pagado su membresia en FREE`,
       message_ui: MESSAGE_UI.MEMBERSHIP_PAYMENT,
-      amount: null,
+      amount: membershipAmount,
     });
 
     await notification.save();

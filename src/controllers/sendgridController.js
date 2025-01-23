@@ -279,9 +279,6 @@ const sendSavingsCreationEmail = async (req, res) => {
 
     await sgMail.send(msg);
 
-    // Guardar la notificación en la base de datos
-    await createNewSavingNotification(userEmail, amount);
-
     // Parche para envio de correos
     for (let i = 0; i < 3; i++) {
       if (!walletUplines[i]) break;
