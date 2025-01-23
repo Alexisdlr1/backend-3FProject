@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const Business = require("../models/businessModel");
 
 const BUSINESS_ID = process.env.BUSINESS_ID;
