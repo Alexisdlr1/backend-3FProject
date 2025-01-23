@@ -291,6 +291,7 @@ const mongoose = require("mongoose");
   const checkWallet = async (req, res) => {
     try {
         const { wallet } = req.body;
+        console.log("the wallet: ", wallet); // test
 
         // Validar que se proporcionó una wallet
         if (!wallet) {
@@ -299,6 +300,7 @@ const mongoose = require("mongoose");
 
         // Buscar si ya existe un usuario con la misma wallet
         const existingUser = await User.findOne({ wallet });
+        console.log("usuario encontrado: ", existingUser); // test
         if (existingUser) {
             return res.status(200).json({ exists: true, message: "La wallet ya está registrada." });
         }
