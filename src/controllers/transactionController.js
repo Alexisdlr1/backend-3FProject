@@ -52,6 +52,8 @@ const getGroupedTransactions = async (req, res) => {
 // Controlador para crear una transacción
 const createTransaction = async (req, res) => {
     const MEMBERSHIP_AMOUNT = 500;
+    const MEMBERSHIP_TO_UPLINE = 100;
+    const MEMBERSHIP_TO_BUSINESS = MEMBERSHIP_AMOUNT - MEMBERSHIP_TO_UPLINE;
 
     try {
         const { userId, amount, date, hash } = req.body;
@@ -71,6 +73,7 @@ const createTransaction = async (req, res) => {
 
         const userEmail = user.email;
         const uplines = user.uplineCommisions
+        const directUpline = await User.findOne({ wallet: uplines[0] });
         let finalAmount = amount;
 
         // Verificar que el monto no sea negativo
@@ -89,7 +92,7 @@ const createTransaction = async (req, res) => {
             }
 
             // Registrar membresia hacia el negocio
-            const registered = depositMembershipToBusiness(MEMBERSHIP_AMOUNT);
+            const registered = depositMembershipToBusiness(MEMBERSHIP_TO_BUSINESS);
 
             if (!registered) {
                 return res.status(400).json({ error: "El monto de la membresia no puedo ser registrado." });
@@ -98,8 +101,14 @@ const createTransaction = async (req, res) => {
             // Actualiza el campo membership si esta correcto
             user.membership = MEMBERSHIP_AMOUNT;
 
-            // Emite notificacion
+            // Emite notificacion de pago de membresia
             await createMembershipPaymentNotification(userEmail, MEMBERSHIP_AMOUNT);
+
+            // Emite notificacion de comision de membresia al upline
+            if (directUpline) {
+                const emailUpline = directUpline.email;
+                await createCommissionNotification(emailUpline, MEMBERSHIP_TO_UPLINE);
+            }
         }
 
         // Actualiza el balance de ahorros activos en el negocio
