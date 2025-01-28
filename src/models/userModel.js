@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
     lockUntil: { type: Date, default: null },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
+    withdrawalWallets: [{ type: String }],
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
