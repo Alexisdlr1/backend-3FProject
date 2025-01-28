@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const WithdrawalWallet = new mongoose.Schema({
-    wallet: { type: String },
+    wallet: { type: String, required: true },
     isUsable: { type: Boolean, default: false },
-    releseDate: { type: Date },
+    releaseDate: { type: Date },
 }, { timestamps: true })
 
 const userSchema = new mongoose.Schema({
@@ -20,15 +20,15 @@ const userSchema = new mongoose.Schema({
         get: v => v ? v.toString() : v,
     },
     referred_by: { type: String },
-    referrals: [{ type: String }],
-    uplineCommisions: [{ type: String }],
+    referrals: { type: [String], default: [] },
+    uplineCommisions: { type: [String], default: [] },
     email_beneficiary: { type: String },
     name_beneficiary: { type: String },
     failedAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
-    withdrawalWallets: [WithdrawalWallet],
+    withdrawalWallets: { type: [WithdrawalWallet], default: [] },
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
