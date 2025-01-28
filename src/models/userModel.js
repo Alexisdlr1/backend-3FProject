@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const WithdrawalWallet = new mongoose.Schema({
+    wallet: { type: String },
+    isUsable: { type: Boolean, default: false },
+    releseDate: { type: Date },
+}, { timestamps: true })
+
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -22,7 +28,7 @@ const userSchema = new mongoose.Schema({
     lockUntil: { type: Date, default: null },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
-    withdrawalWallets: [{ type: String }],
+    withdrawalWallets: [WithdrawalWallet],
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
