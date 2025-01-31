@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 
+// Only document type
 const WithdrawalWallet = new mongoose.Schema({
     wallet: { type: String, required: true },
+    isActive: { type: Boolean, default: false },
     isUsable: { type: Boolean, default: false },
     releaseDate: { type: Date },
 }, { timestamps: true })
@@ -28,7 +30,7 @@ const userSchema = new mongoose.Schema({
     lockUntil: { type: Date, default: null },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
-    withdrawalWallets: { type: [WithdrawalWallet], default: [] },
+    withdrawalWallet: { type:WithdrawalWallet, default: {} },
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);

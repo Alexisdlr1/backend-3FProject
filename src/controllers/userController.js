@@ -311,78 +311,6 @@ const checkWallet = async (req, res) => {
   }
 };
 
-// Add new wallet for withdraw
-const addWithdrawWallet = async (req, res) => {
-
-  const { id } = req.params;
-  const { wallet } = req.body;
-
-  try {
-    if (!wallet || !id) return res.status(401).json({ message: "Faltan datos para peticion" });
-
-    // Validar el formato del ID
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "ID inválido." });
-    }
-
-    const user = await User.findById(id);
-    if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
-
-    const withdrawalWallets = user.withdrawalWallets;
-    
-    const releaseDate = new Date();
-    releaseDate.setDate(releaseDate.getDate() + 1);
-
-    withdrawalWallets.push({
-      isUsable: false,
-      wallet,
-      releaseDate,
-    });
-
-    await user.save();
-
-    return res.status(200).json({ message: "Wallet para retiro agregada exitosament" });
-  } catch (error) {
-    res.status(500).json({ message: "Error al agregar wallet para retiro.", error: error.message });
-  }
-
-};
-
-// Add new wallet for withdraw
-const disableWithdrawWallet = async (req, res) => {
-
-  const { id } = req.params;
-  const { wallet } = req.body;
-
-  try {
-    if (!wallet || !id) return res.status(401).json({ message: "Faltan datos para peticion" });
-
-    // Validar el formato del ID
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "ID inválido." });
-    }
-
-    const user = await User.findById(id);
-    if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
-    
-    // Buscar la wallet dentro del array de `withdrawalWallets`
-    const walletIndex = user.withdrawalWallets.findIndex(w => w.wallet === wallet);
-    
-    if (walletIndex === -1) {
-      return res.status(404).json({ message: "Wallet no encontrada en el usuario" });
-    }
-
-    user.withdrawalWallets[walletIndex].isUsable = true;
-
-    await user.save();
-
-    return res.status(200).json({ message: "Estado de wallet actualizado correctamente" });
-  } catch (error) {
-    res.status(500).json({ message: "Error al actualizar el estado de la wallet.", error: error.message });
-  }
-
-};
-
 // Actualizar datos del usuario
 const updateUser = async (req, res) => {
   try {
@@ -522,8 +450,6 @@ module.exports = {
   getAllUsers,
   loginUser,
   checkWallet,
-  addWithdrawWallet,
-  disableWithdrawWallet,
   updateUser,
   getUserById,
   getReferersCommissions,

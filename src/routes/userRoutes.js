@@ -9,8 +9,6 @@ const {
   getReferersCommissions,
   resetPassword,
   getNotificationsBySingleEmail,
-  addWithdrawWallet,
-  disableWithdrawWallet
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -29,12 +27,6 @@ router.post("/resetPassword", resetPassword);
 
 // Obtener notificaciones by email
 router.post("/notifications", getNotificationsBySingleEmail);
-
-// Agregar wallet para retiro
-router.post("/addWallet/:id", addWithdrawWallet);
-
-// Desactivar wallet para retiro
-router.post("/disableWallet/:id", disableWithdrawWallet);
 
 // Ruta para obtener todos los usuarios
 router.get("/", getAllUsers);
