@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 // Only document type
 const WithdrawalWallet = new mongoose.Schema({
-    wallet: { type: String, required: true },
+    wallet: { type: String },
     isActive: { type: Boolean, default: false },
     isUsable: { type: Boolean, default: false },
     releaseDate: { type: Date },
