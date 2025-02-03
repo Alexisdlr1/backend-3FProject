@@ -5,7 +5,7 @@ const userRoutes = require("./routes/userRoutes");
 const whiteListRoutes = require("./routes/whiteListRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const sendgridRoutes = require("./routes/sendgrid");
-// const withdrawalWalletRoutes = require("./routes/withdrawalWalletRoutes");
+const withdrawalWalletRoutes = require("./routes/withdrawalWalletRoutes");
 
 const app = express();
 
@@ -32,7 +32,7 @@ app.use("/f3api/users", userRoutes);
 app.use("/f3api/whiteList", whiteListRoutes);
 app.use("/f3api/transaction", transactionRoutes);
 app.use("/f3api/sendgrid", sendgridRoutes);
-// app.use("/f3api/withdrawalWallet", withdrawalWalletRoutes);
+app.use("/f3api/withdrawalWallet", withdrawalWalletRoutes);
 
 // Endpoint para recibir el webhook de GitHub
 app.post("/f3api/webhook", (req, res) => {
