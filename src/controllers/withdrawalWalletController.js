@@ -15,8 +15,8 @@ const addWithdrawWallet = async (req, res) => {
       return res.status(400).json({ message: "ID inválido." });
     }
     
-    const releaseDate = new Date();
-    releaseDate.setDate(releaseDate.getDate() + 1);
+    const updateDate = new Date();
+    const releaseDate = updateDate.setDate(releaseDate.getDate() + 1);
 
     const user = await User.findOneAndUpdate(
       { _id: id },
@@ -24,7 +24,8 @@ const addWithdrawWallet = async (req, res) => {
         wallet,
         isActive: false,
         isUsable: false,
-        releaseDate 
+        releaseDate,
+        updateDate, 
       } },
       { new: true }
     );
