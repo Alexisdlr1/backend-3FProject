@@ -7,6 +7,6 @@ const router = express.Router();
 router.post("/add/:id", addWithdrawWallet);
 
 // Actualizar wallet para retiro
-router.post("/update/:id", updateWithdrawalWallet);
+router.put("/update/:id", updateWithdrawalWallet);
 
 module.exports = router;
