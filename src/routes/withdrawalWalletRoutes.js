@@ -1,12 +1,15 @@
 const express = require("express");
-const { addWithdrawWallet, updateWithdrawalWallet } = require("../controllers/withdrawalWalletController");
+const { addWithdrawWallet, updateWithdrawalWallet, deleteWithdrawalWallet } = require("../controllers/withdrawalWalletController");
 
 const router = express.Router();
 
-// Agregar wallet para retiro
+// Agregar wallet secundaria
 router.post("/add/:id", addWithdrawWallet);
 
-// Actualizar wallet para retiro
+// Actualizar wallet secundaria
 router.put("/update/:id", updateWithdrawalWallet);
+
+// Eliminar wallet secundaria
+router.put("/delete/:id", deleteWithdrawalWallet);
 
 module.exports = router;

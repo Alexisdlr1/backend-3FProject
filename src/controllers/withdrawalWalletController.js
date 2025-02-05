@@ -11,9 +11,7 @@ const addWithdrawWallet = async (req, res) => {
     if (!wallet || !id) return res.status(401).json({ message: "Faltan datos para peticion" });
 
     // Validar el formato del ID
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "ID inválido." });
-    }
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ message: "ID inválido." });
     
     const updateDate = new Date();
     const releaseDate = updateDate.setDate(releaseDate.getDate() + 1);
@@ -31,9 +29,9 @@ const addWithdrawWallet = async (req, res) => {
     );
     if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
-    return res.status(200).json({ message: "Wallet para retiro agregada exitosament" });
+    return res.status(200).json({ message: "Wallet secundaria agregada exitosamente!" });
   } catch (error) {
-    res.status(500).json({ message: "Error al agregar wallet para retiro.", error: error.message });
+    res.status(500).json({ message: "Error al agregar wallet secundaria.", error: error.message });
   }
 
 };
@@ -45,28 +43,51 @@ const updateWithdrawalWallet = async (req, res) => {
 
   try {
     
-    if (!updates || typeof updates !== "object" || id) return res.status(401).json({ message: "Faltan datos para peticion" });
+    if (!updates || typeof updates !== "object" || !id) return res.status(401).json({ message: "Faltan datos para peticion" });
 
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "ID inválido." });
-    }
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ message: "ID inválido." });
 
     // Buscar y actualizar el usuario con el nuevo valor en withdrawalWallet
     const user = await User.findOneAndUpdate(
-      { _id: userId },
-      { $set: { "withdrawalWallet": { ...updates } } }, // Sobrescribe los valores existentes
-      { new: true, runValidators: true } // Retorna el usuario actualizado y valida los datos
+      { _id: id },
+      { $set: { "withdrawalWallet": { ...updates } } },
+      { new: true, runValidators: true }
     );
 
     if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
-    return res.status(200).json({ message: "Withdrawal wallet actualizada con éxito", user });
+    return res.status(200).json({ message: "Wallet secundaria actualizada con éxito", user });
   } catch (error) {
-    return { message: "Error al actualizar withdrawalWallet:", error: error.message };
+    return { message: "Error al actualizar wallet secundaria.", error: error.message };
   }
 };
+
+const deleteWithdrawalWallet = async (res, req) => {
+  const { id } = req.params;
+
+  try {
+    if (!id) return res.status(401).json({ message: "Faltan datos para peticion" });
+
+    // Validar el formato del ID
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ message: "ID inválido." });
+
+    // Buscar y eliminar el usuario
+    const user = await User.findOneAndUpdate(
+      { _id: id },
+      { $unset: { "withdrawalWallet": undefined } },
+      { new: true, runValidators: true }
+    );
+
+    // Verificar si el usuario fue encontrado y eliminado
+    if (!user) return res.status(404).json({ message: "Usuario no encontrado." });
+
+    res.status(200).json({ message: "Wallet secundaria eliminada exitosamente"});
+  } catch (error) {
+    res.status(500).json({ message: "Error al eliminar wallet secundaria.", error: error.message });
+  }
+}
 
 
 // enable wallet for withdraw
 
-module.exports = { addWithdrawWallet, updateWithdrawalWallet };
+module.exports = { addWithdrawWallet, updateWithdrawalWallet, deleteWithdrawalWallet };
