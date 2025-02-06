@@ -14,7 +14,8 @@ const addWithdrawWallet = async (req, res) => {
     if (!mongoose.isValidObjectId(id)) return res.status(400).json({ message: "ID inválido." });
     
     const updateDate = new Date();
-    const releaseDate = updateDate.setDate(releaseDate.getDate() + 1);
+    const releaseDate = new Date(updateDate);
+    releaseDate.setDate(releaseDate.getDate() + 1);
 
     const user = await User.findOneAndUpdate(
       { _id: id },
