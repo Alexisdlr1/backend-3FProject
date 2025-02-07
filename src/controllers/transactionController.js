@@ -44,7 +44,7 @@ const getGroupedTransactions = async (req, res) => {
             data: transactions,
         });
     } catch (error) {
-        console.error("Error al obtener transacciones agrupadas:", error);
+        // console.error("Error al obtener transacciones agrupadas:", error);
         return res.status(500).json({ error: "Ocurrió un error en el servidor." });
     }
 };
@@ -165,7 +165,7 @@ const createTransaction = async (req, res) => {
             transaction: savedTransaction
         });
     } catch (error) {
-        console.error("Error al crear la transacción:", error);
+        // console.error("Error al crear la transacción:", error);
         return res.status(500).json({ error: "Ocurrió un error en el servidor." });
     }
 };
@@ -206,7 +206,7 @@ const getTransactionAndBalanceById = async (req, res) => {
             balance: user.totalBalance
         });
     } catch (error) {
-        console.error("Error al obtener transacciones y balance:", error);
+        // console.error("Error al obtener transacciones y balance:", error);
         return res.status(500).json({ error: "Ocurrió un error en el servidor." });
     }
 };

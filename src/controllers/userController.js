@@ -7,8 +7,6 @@ const mongoose = require("mongoose");
 // Obtener todos los usuarios
 const getAllUsers = async (req, res) => {
   try {
-    console.log("Iniciando getAllUsers...");
-
     // Parámetros de paginación
     const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
     const limit = parseInt(req.query.limit) || 10; // Usuarios por página (por defecto 10)
@@ -23,7 +21,6 @@ const getAllUsers = async (req, res) => {
     // Obtener el total de usuarios para la respuesta
     const totalUsers = await User.countDocuments();
 
-    console.log(`Usuarios encontrados: ${users.length}`);
     res.status(200).json({
       total: totalUsers,
       page,
@@ -31,7 +28,6 @@ const getAllUsers = async (req, res) => {
       users,
     });
   } catch (error) {
-    console.error("Error en getAllUsers:", error.message);
     res.status(500).json({ message: "Error al obtener usuarios.", error: error.message });
   }
 };
@@ -39,7 +35,6 @@ const getAllUsers = async (req, res) => {
 // Obtener usuario por ID
 const getUserById = async (req, res) => {
   try {
-    console.log("Iniciando getUserById...");
 
     const userId = req.params.id;
 
@@ -49,10 +44,8 @@ const getUserById = async (req, res) => {
       return res.status(404).json({ message: "Usuario no encontrado." });
     }
 
-    console.log(`Usuario encontrado: ${user.name}`);
     res.status(200).json({ user });
   } catch (error) {
-    console.error("Error en getUserById:", error.message);
     res.status(500).json({ message: "Error al obtener el usuario.", error: error.message });
   }
 };
@@ -148,7 +141,7 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error en login:", error.message);
+    // console.error("Error en login:", error.message);
     res.status(500).json({ message: "Error en el servidor.", error: error.message });
   }
 };
@@ -211,7 +204,7 @@ const createUser = async (req, res) => {
 
     res.status(201).json({ message: "Usuario creado con éxito.", user });
   } catch (error) {
-    console.error("Error al crear usuario:", error.message);
+    // console.error("Error al crear usuario:", error.message);
     res.status(500).json({ message: "Error al crear usuario.", error: error.message });
   }
 };
@@ -222,14 +215,12 @@ const getReferersCommissions = async (req, res) => {
     const { wallet } = req.params;
 
     if (!wallet) {
-      console.log("Error: La wallet es obligatoria.");
       return res.status(400).json({ message: "La wallet es obligatoria." });
     }
 
     // Verificar si el usuario existe
     const user = await User.findOne({ wallet });
     if (!user) {
-      console.log(`Usuario no encontrado para la wallet: ${wallet}`);
       return res.status(404).json({ message: "Usuario no encontrado." });
     }
 
@@ -279,7 +270,7 @@ const getReferersCommissions = async (req, res) => {
       ReferersCommissions: ReferersCommissionsResponse,
     });
   } catch (error) {
-    console.error("Error al obtener referrals:", error.message);
+    // console.error("Error al obtener referrals:", error.message);
     res.status(500).json({
       message: "Error al obtener referrals.",
       error: error.message,
@@ -291,7 +282,6 @@ const getReferersCommissions = async (req, res) => {
 const checkWallet = async (req, res) => {
   try {
     const { wallet } = req.body;
-    console.log("the wallet: ", wallet); // test
 
     // Validar que se proporcionó una wallet
     if (!wallet) {
@@ -337,22 +327,18 @@ const updateUser = async (req, res) => {
 
     res.status(200).json({ message: "Usuario actualizado con éxito.", user: updatedUser });
   } catch (error) {
-    console.error("Error en updateUser:", error.message);
+    // console.error("Error en updateUser:", error.message);
     res.status(500).json({ message: "Error al actualizar el usuario.", error: error.message });
   }
 };
 
 // Actualizar password
 const resetPassword = async (req, res) => {
-  console.log("Intentando resetear contraseña...");
   try {
     const { token, email, newPassword } = req.body; // Incluye el token en el body
 
-    console.log("Datos recibidos:", { email, token });
-
     // Verificar que los campos obligatorios estén presentes
     if (!token || !email || !newPassword) {
-      console.log("Faltan datos obligatorios para resetear la contraseña.");
       return res.status(400).json({ message: "Por favor, ingresa todos los campos." });
     }
 
@@ -362,14 +348,12 @@ const resetPassword = async (req, res) => {
       resetPasswordExpires: { $gt: Date.now() },
     });
     if (!user) {
-      console.log("Token inválido o expirado.");
       return res.status(400).json({ message: "Token inválido o expirado." });
     }
 
     // Validar formato de la nueva contraseña
     const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
     if (!passwordRegex.test(newPassword)) {
-      console.log("La contraseña no cumple con los requisitos.");
       return res.status(400).json({
         message: "La contraseña debe tener al menos 8 caracteres, incluir una mayúscula y un carácter especial.",
       });
@@ -378,12 +362,10 @@ const resetPassword = async (req, res) => {
     // Validar que la nueva contraseña no sea la misma que la actual
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
     if (isSamePassword) {
-      console.log("La nueva contraseña no puede ser igual a la anterior.");
       return res.status(400).json({ message: "La nueva contraseña no puede ser igual a la anterior." });
     }
 
     // Encriptar la nueva contraseña
-    console.log("Encriptando nueva contraseña...");
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
@@ -393,10 +375,9 @@ const resetPassword = async (req, res) => {
     user.resetPasswordExpires = undefined; // Eliminar la expiración del token
     await user.save();
 
-    console.log("Contraseña actualizada exitosamente.");
     res.status(200).json({ message: "Contraseña restablecida exitosamente." });
   } catch (error) {
-    console.error("Error en resetPassword:", error.message);
+    // console.error("Error en resetPassword:", error.message);
     res.status(500).json({ message: "Error en el servidor.", error: error.message });
   }
 };
@@ -404,7 +385,6 @@ const resetPassword = async (req, res) => {
 // Función para obtener las notificaciones por email usando POST
 const getNotificationsBySingleEmail = async (req, res) => {
   try {
-    console.log("Iniciando getNotificationsBySingleEmail...");
 
     const { email } = req.body;  // Usar body en lugar de query
     if (!email) {
@@ -414,8 +394,6 @@ const getNotificationsBySingleEmail = async (req, res) => {
     const page = parseInt(req.body.page) || 1;
     const limit = parseInt(req.body.limit) || 10;
     const skip = (page - 1) * limit;
-
-    console.log(`Buscando notificaciones para el email: ${email}, page: ${page}, limit: ${limit}`);
 
     const notifications = await Notification.find({ email })
       .skip(skip)
@@ -428,7 +406,6 @@ const getNotificationsBySingleEmail = async (req, res) => {
       return res.status(404).json({ error: "No se encontraron notificaciones para este email." });
     }
 
-    console.log(`Notificaciones encontradas: ${notifications.length}`);
     res.status(200).json({
       total: totalNotifications,
       page,
@@ -437,7 +414,7 @@ const getNotificationsBySingleEmail = async (req, res) => {
       notifications,
     });
   } catch (error) {
-    console.error("Error en getNotificationsBySingleEmail:", error);
+    // console.error("Error en getNotificationsBySingleEmail:", error);
     res.status(500).json({
       message: "Error al obtener notificaciones para el email.",
       error: error.message,  // Incluye más detalles del error

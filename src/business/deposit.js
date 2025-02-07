@@ -55,7 +55,7 @@ const depositMembershipToBusiness = async (membershipAmount) => {
 
     return true;
   } catch (e) {
-    console.error("Un error en el registro de membresia: ", e);
+    // console.error("Un error en el registro de membresia: ", e);
     return false;
   }
 
@@ -103,7 +103,7 @@ const depositSavingToBusiness = async (amount) => {
 
     return true;
   } catch (e) {
-    console.error("Un error en el registro de transaccion: ", e);
+    // console.error("Un error en el registro de transaccion: ", e);
     return false;
   }
 

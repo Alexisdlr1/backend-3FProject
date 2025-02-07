@@ -30,43 +30,44 @@ const addWithdrawWallet = async (req, res) => {
     );
     if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
-    return res.status(200).json({ message: "Wallet secundaria agregada exitosamente!" });
+    res.status(200).json({ message: "Wallet secundaria agregada exitosamente!" });
   } catch (error) {
     res.status(500).json({ message: "Error al agregar wallet secundaria.", error: error.message });
   }
 
 };
 
-const updateWithdrawalWallet = async (req, res) => {
+const enableWithdrawalWallet = async (req, res) => {
 
   const { id } = req.params;
-  const updates = req.body;
+  const { isActive } = req.body;
 
   try {
     
-    if (!updates || typeof updates !== "object" || !id) return res.status(401).json({ message: "Faltan datos para peticion" });
+    if (typeof isActive !== "boolean" || !id) return res.status(401).json({ message: "Faltan datos para peticion" });
 
     if (!mongoose.isValidObjectId(id)) return res.status(400).json({ message: "ID inválido." });
 
-    // Buscar y actualizar el usuario con el nuevo valor en withdrawalWallet
-    const user = await User.findOneAndUpdate(
-      { _id: id },
-      { $set: { "withdrawalWallet": { ...updates } } },
-      { new: true, runValidators: true }
-    );
+    const user = await User.findById(id);
 
     if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
-    return res.status(200).json({ message: "Wallet secundaria actualizada con éxito", user });
+    user.withdrawalWallet.isActive = isActive;
+
+    await user.save();
+
+    res.status(200).json({ message: "Wallet secundaria actualizada con éxito" });
   } catch (error) {
-    return { message: "Error al actualizar wallet secundaria.", error: error.message };
+    res.status(500).json({ message: "Error al actualizar wallet secundaria.", error: error.message });
   }
 };
 
 const deleteWithdrawalWallet = async (res, req) => {
+  
   const { id } = req.params;
 
   try {
+    
     if (!id) return res.status(401).json({ message: "Faltan datos para peticion" });
 
     // Validar el formato del ID
@@ -91,4 +92,4 @@ const deleteWithdrawalWallet = async (res, req) => {
 
 // enable wallet for withdraw
 
-module.exports = { addWithdrawWallet, updateWithdrawalWallet, deleteWithdrawalWallet };
+module.exports = { addWithdrawWallet, enableWithdrawalWallet, deleteWithdrawalWallet };

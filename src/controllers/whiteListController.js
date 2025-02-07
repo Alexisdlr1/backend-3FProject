@@ -5,7 +5,6 @@ const User = require("../models/userModel");
 // Obtener todos los usuarios de la whitelist
 const getWhiteListUsers = async (req, res) => {
   try {
-      console.log("Iniciando getWhiteListUsers...");
 
       // Parámetros de paginación
       const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
@@ -21,7 +20,6 @@ const getWhiteListUsers = async (req, res) => {
       // Obtener el total de usuarios para la respuesta
       const totalUsers = await WhiteList.countDocuments();
 
-      console.log(`Usuarios encontrados: ${users.length}`);
       res.status(200).json({
           total: totalUsers,
           page,
@@ -29,7 +27,7 @@ const getWhiteListUsers = async (req, res) => {
           users,
       });
   } catch (error) {
-      console.error("Error en getWhiteListUsers:", error.message);
+      // console.error("Error en getWhiteListUsers:", error.message);
       res.status(500).json({ message: "Error al obtener usuarios.", error: error.message });
   }
 };
@@ -87,7 +85,7 @@ const createWhiteListUser = async (req, res) => {
 
     res.status(201).json({ message: "Usuario creado con éxito.", user });
   } catch (error) {
-    console.error("Error en createWhiteListUser:", error.message);
+    // console.error("Error en createWhiteListUser:", error.message);
     res
       .status(500)
       .json({ message: "Error al crear usuario.", error: error.message });
@@ -123,7 +121,7 @@ const updateWhiteListUser = async (req, res) => {
 
     res.status(200).json({ message: "Usuario actualizado con éxito.", user: updatedUser });
   } catch (error) {
-    console.error("Error en updateWhiteListUser:", error.message);
+    // console.error("Error en updateWhiteListUser:", error.message);
     res.status(500).json({ message: "Error al actualizar el usuario.", error: error.message });
   }
 };
@@ -148,7 +146,7 @@ const deleteWhiteListUser = async (req, res) => {
 
     res.status(200).json({ message: "Usuario eliminado con éxito.", user: deletedUser });
   } catch (error) {
-    console.error("Error en deleteWhiteListUser:", error.message);
+    // console.error("Error en deleteWhiteListUser:", error.message);
     res.status(500).json({ message: "Error al eliminar el usuario.", error: error.message });
   }
 };

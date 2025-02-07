@@ -27,6 +27,13 @@ app.get("/", (req, res) => {
   res.status(200).send("Test 06/01/2025.");
 });
 
+// const userAgent = req.headers['user-agent'];
+
+// // Si la petición viene desde un navegador, bloquearla
+// if (userAgent && (userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari'))) {
+//   return res.status(403).json({ error: 'Acceso no permitido desde el navegador' });
+// }
+
 // Rutas
 app.use("/f3api/users", userRoutes);
 app.use("/f3api/whiteList", whiteListRoutes);
@@ -42,33 +49,33 @@ app.post("/f3api/webhook", (req, res) => {
   }
 
   if (req.body.ref === "refs/heads/main") {
-    console.log("Webhook recibido: Ejecutando git pull...");
+    // console.log("Webhook recibido: Ejecutando git pull...");
 
     exec("cd /home/freefriendsandfamily/backend-3FProject && git pull --no-rebase", (error, stdout, stderr) => {
       if (error) {
-        console.error(`Error al ejecutar git pull: ${error.message}`);
+        // console.error(`Error al ejecutar git pull: ${error.message}`);
         return res.status(500).send("Error al ejecutar git pull");
       }
       if (stderr) {
-        console.error(`stderr: ${stderr}`);
+        // console.error(`stderr: ${stderr}`);
       }
-      console.log(`stdout: ${stdout}`);
+      // console.log(`stdout: ${stdout}`);
     
       // Reiniciar el servidor con pm2 (con reload)
       exec("pm2 reload backend", (reloadError, reloadStdout, reloadStderr) => {
         if (reloadError) {
-          console.error(`Error al recargar el servidor: ${reloadError.message}`);
+          // console.error(`Error al recargar el servidor: ${reloadError.message}`);
           return res.status(500).send("Error al recargar el servidor.");
         }
         if (reloadStderr) {
-          console.error(`stderr: ${reloadStderr}`);
+          // console.error(`stderr: ${reloadStderr}`);
         }
-        console.log(`stdout: ${reloadStdout}`);
+        // console.log(`stdout: ${reloadStdout}`);
         res.status(200).send("Repositorio actualizado y servidor recargado correctamente.");
       });
     });
   } else {
-    console.log("No es un push a la rama principal. Ignorando.");
+    // console.log("No es un push a la rama principal. Ignorando.");
     res.status(400).json({ message: "Evento no relevante." });
   }
 });
@@ -91,7 +98,7 @@ app.get("/f3api/health", async (req, res) => {
       throw new Error("No se pudo conectar a la base de datos");
     }
   } catch (error) {
-    console.error("Error en el health check:", error.message);
+    // console.error("Error en el health check:", error.message);
     res.status(500).json({
       status: "error",
       server: "online",
@@ -106,14 +113,14 @@ const checkDatabaseConnection = async () => {
     const db = mongoose.connection;
     if (db.readyState === 1) {
       await db.db.admin().ping();
-      console.log("Conexión con la base de datos establecida.");
+      // console.log("Conexión con la base de datos establecida.");
       return true;
     } else {
-      console.error("La conexión con la base de datos no está activa.");
+      // console.error("La conexión con la base de datos no está activa.");
       return false;
     }
   } catch (error) {
-    console.error("Error al verificar la conexión a la base de datos:", error.message);
+    // console.error("Error al verificar la conexión a la base de datos:", error.message);
     return false;
   }
 };

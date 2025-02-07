@@ -51,7 +51,7 @@ const sendUserRegistrationEmail = async (req, res) => {
 
     res.status(200).json({ message: "Email sent successfully and notification saved." });
   } catch (error) {
-    console.error("Error sending email: ", error);
+    // console.error("Error sending email: ", error);
     res.status(500).json({ message: "Error sending email" });
   }
 };
@@ -83,7 +83,7 @@ const sendWhitelistActivationEmail = async (req, res) => {
 
     res.status(200).json({ message: "Email sent successfully and notification saved." });
   } catch (error) {
-    console.error("Error sending email: ", error);
+    // console.error("Error sending email: ", error);
     res.status(500).json({ message: "Error sending email" });
   }
 };
@@ -129,7 +129,7 @@ const sendPasswordResetRequestEmail = async (req, res) => {
 
     res.status(200).json({ message: "Correo de restablecimiento enviado con éxito." });
   } catch (error) {
-    console.error("Error al solicitar restablecimiento:", error.message);
+    // console.error("Error al solicitar restablecimiento:", error.message);
     res.status(500).json({ message: "Error al solicitar restablecimiento de contraseña." });
   }
 };
@@ -161,7 +161,7 @@ const sendPasswordChangeConfirmationEmail = async (req, res) => {
 
     res.status(200).json({ message: "Password confirmation email sent and notification saved." });
   } catch (error) {
-    console.error("Error sending password confirmation email: ", error);
+    // console.error("Error sending password confirmation email: ", error);
     res.status(500).json({ message: "Error sending confirmation email." });
   }
 };
@@ -193,7 +193,7 @@ const sendPullPaymentEmail = async (req, res) => {
 
     res.status(200).json({ message: "Pull payment email sent and notification saved." });
   } catch (error) {
-    console.error("Error sending pull payment email: ", e);
+    // console.error("Error sending pull payment email: ", e);
     res.status(500).json({ message: "Error sending pull payment email." });
   }
 
@@ -236,7 +236,7 @@ const sendCommissionPaymentEmail = async (req, res) => {
 
     res.status(200).json({ message: "Commission payment email sent and notification saved." });
   } catch (e) {
-    console.error("Error sending commission payment email: ", e);
+    // console.error("Error sending commission payment email: ", e);
     res.status(500).json({ message: "Error sending commission payment email." });
   }
 };
@@ -288,7 +288,7 @@ const sendSavingsCreationEmail = async (req, res) => {
 
     res.status(200).json({ message: "Saving email sent." });
   } catch (error) {
-    console.error("Error sending saving email: ", error);
+    // console.error("Error sending saving email: ", error);
     res.status(500).json({ message: "Error sending saving email." });
   }
 };
@@ -317,7 +317,7 @@ const patchCommisionPaymentEmail = async (wallet, commissionAmount) => {
     await sgMail.send(msg);
 
   } catch (e) {
-    console.error("Error sending commission payment email: ", e);
+    // console.error("Error sending commission payment email: ", e);
   }
 };
 
@@ -368,8 +368,7 @@ const sendNewAffiliateEmail = async (req, res) => {
 
     res.status(200).json({ message: "Email sent successfully." });
   } catch (error) {
-
-    console.error("Error sending email: ", error);
+    // console.error("Error sending email: ", error);
     res.status(500).json({ message: "Error sending email" });
   }
 };

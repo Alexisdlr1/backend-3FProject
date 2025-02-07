@@ -14,8 +14,7 @@ const calculateNetCommission = (amount, commissionPercent) => {
 const getCommissionsPerSaving = (totalAmount) => {
   const commissions = [];
 
-  for (const [Key, value] of Object.entries(COMMISSION_PER_LEVEL)) {
-    console.log(Key);
+  for (const [, value] of Object.entries(COMMISSION_PER_LEVEL)) {
     commissions.push(calculateNetCommission(totalAmount, value));
   }
 
