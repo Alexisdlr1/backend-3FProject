@@ -43,14 +43,29 @@ const enableWithdrawalWallet = async (req, res) => {
   const { isActive } = req.body;
 
   try {
-    
-    if (typeof isActive !== "boolean" || !id) return res.status(401).json({ message: "Faltan datos para peticion" });
+    if (!req.body.hasOwnProperty("isActive") || typeof isActive !== "boolean" || !id) {
+      return res.status(401).json({ message: "Faltan datos para la petición" });
+    }
 
     if (!mongoose.isValidObjectId(id)) return res.status(400).json({ message: "ID inválido." });
 
     const user = await User.findById(id);
 
     if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+
+    if (!user.withdrawalWallet || !user.withdrawalWallet.releaseDate) {
+      return res.status(400).json({ message: "No hay wallet registrada o fecha de liberación inválida" });
+    }
+    
+    const walletTimestamp = new Date(user.withdrawalWallet.releaseDate);
+    const releaseTimestamp = walletTimestamp.getTime();
+    const serverTimestamp = Date.now();
+
+    if (releaseTimestamp > serverTimestamp) {
+      return res.status(403).json({ 
+        message: `Wallet bloqueada hasta ${walletTimestamp.toLocaleString()}` 
+      });
+    }
 
     user.withdrawalWallet.isActive = isActive;
 
@@ -62,7 +77,7 @@ const enableWithdrawalWallet = async (req, res) => {
   }
 };
 
-const deleteWithdrawalWallet = async (res, req) => {
+const deleteWithdrawalWallet = async (req, res) => {
   
   const { id } = req.params;
 
@@ -76,7 +91,7 @@ const deleteWithdrawalWallet = async (res, req) => {
     // Buscar y eliminar el usuario
     const user = await User.findOneAndUpdate(
       { _id: id },
-      { $unset: { "withdrawalWallet": undefined } },
+      { $unset: { "withdrawalWallet": {} } },
       { new: true, runValidators: true }
     );
 

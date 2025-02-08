@@ -5,30 +5,35 @@ const User = require("../models/userModel");
 // Obtener todos los usuarios de la whitelist
 const getWhiteListUsers = async (req, res) => {
   try {
+    // const userAgent = req.headers['user-agent'];
 
-      // Parámetros de paginación
-      const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
-      const limit = parseInt(req.query.limit) || 10; // Usuarios por página (por defecto 10)
-      const skip = (page - 1) * limit; // Usuarios a saltar
+    // // Si la petición viene desde un navegador, bloquearla
+    // if (userAgent && (userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari'))) {
+    //   return res.status(403).json({ error: 'Acceso no permitido desde el navegador' });
+    // }
+    // Parámetros de paginación
+    const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
+    const limit = parseInt(req.query.limit) || 10; // Usuarios por página (por defecto 10)
+    const skip = (page - 1) * limit; // Usuarios a saltar
 
-      // Consultar usuarios con paginación
-      const users = await WhiteList.find()
-          .skip(skip)
-          .limit(limit)
-          .select("email isApproved");
+    // Consultar usuarios con paginación
+    const users = await WhiteList.find()
+      .skip(skip)
+      .limit(limit)
+      .select("email isApproved");
 
-      // Obtener el total de usuarios para la respuesta
-      const totalUsers = await WhiteList.countDocuments();
+    // Obtener el total de usuarios para la respuesta
+    const totalUsers = await WhiteList.countDocuments();
 
-      res.status(200).json({
-          total: totalUsers,
-          page,
-          pages: Math.ceil(totalUsers / limit),
-          users,
-      });
+    res.status(200).json({
+      total: totalUsers,
+      page,
+      pages: Math.ceil(totalUsers / limit),
+      users,
+    });
   } catch (error) {
-      // console.error("Error en getWhiteListUsers:", error.message);
-      res.status(500).json({ message: "Error al obtener usuarios.", error: error.message });
+    // console.error("Error en getWhiteListUsers:", error.message);
+    res.status(500).json({ message: "Error al obtener usuarios.", error: error.message });
   }
 };
 
@@ -150,5 +155,5 @@ const deleteWhiteListUser = async (req, res) => {
     res.status(500).json({ message: "Error al eliminar el usuario.", error: error.message });
   }
 };
-  
+
 module.exports = { createWhiteListUser, getWhiteListUsers, updateWhiteListUser, deleteWhiteListUser };
