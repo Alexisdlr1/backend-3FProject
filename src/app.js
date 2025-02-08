@@ -24,15 +24,8 @@ app.use(express.json()); // Esta línea es importante
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.status(200).send("Test 06/01/2025.");
+  res.status(200).send("Still working in 08/02/2025");
 });
-
-// const userAgent = req.headers['user-agent'];
-
-// // Si la petición viene desde un navegador, bloquearla
-// if (userAgent && (userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari'))) {
-//   return res.status(403).json({ error: 'Acceso no permitido desde el navegador' });
-// }
 
 // Rutas
 app.use("/f3api/users", userRoutes);
@@ -98,7 +91,6 @@ app.get("/f3api/health", async (req, res) => {
       throw new Error("No se pudo conectar a la base de datos");
     }
   } catch (error) {
-    // console.error("Error en el health check:", error.message);
     res.status(500).json({
       status: "error",
       server: "online",
@@ -113,14 +105,11 @@ const checkDatabaseConnection = async () => {
     const db = mongoose.connection;
     if (db.readyState === 1) {
       await db.db.admin().ping();
-      // console.log("Conexión con la base de datos establecida.");
       return true;
     } else {
-      // console.error("La conexión con la base de datos no está activa.");
       return false;
     }
   } catch (error) {
-    // console.error("Error al verificar la conexión a la base de datos:", error.message);
     return false;
   }
 };

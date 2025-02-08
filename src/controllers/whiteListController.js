@@ -5,12 +5,6 @@ const User = require("../models/userModel");
 // Obtener todos los usuarios de la whitelist
 const getWhiteListUsers = async (req, res) => {
   try {
-    // const userAgent = req.headers['user-agent'];
-
-    // // Si la petición viene desde un navegador, bloquearla
-    // if (userAgent && (userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari'))) {
-    //   return res.status(403).json({ error: 'Acceso no permitido desde el navegador' });
-    // }
     // Parámetros de paginación
     const page = parseInt(req.query.page) || 1; // Página actual (por defecto 1)
     const limit = parseInt(req.query.limit) || 10; // Usuarios por página (por defecto 10)
