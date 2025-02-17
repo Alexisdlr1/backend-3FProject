@@ -1,16 +1,40 @@
 const Transaction = require("../models/transactionModel");
 const User = require("../models/userModel");
-const { getCommissionsPerSaving } = require("../business/commission");
+const { getCommissionsPerSaving, getMembershipAmount, getMembershipToBusiness, getMembershipToUpline } = require("../business/commission");
 const { depositMembershipToBusiness, depositSavingToBusiness } = require("../business/deposit");
-const { 
+const {
     createMembershipPaymentNotification,
     createNewSavingNotification,
     createCommissionNotification,
 } = require("../utils/notification");
+const Business = require("../models/businessModel");
 
 // Ruta para obtener las transacciones agrupadas por usuario
 const getGroupedTransactions = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const totalUsers = await Transaction.aggregate([
+            { $group: { _id: "$userId" } }, // Agrupar por userId para contar usuarios únicos
+            { $count: "total" } // Contar el total de usuarios
+        ]);
+
+        const total = totalUsers.length > 0 ? totalUsers[0].total : 0;
+        const totalPages = Math.ceil(total / limit); // Calcular el total de páginas
+
+        // Si no hay usuarios, devolver una respuesta vacía
+        if (total === 0) {
+            return res.status(404).json({
+                error: "No se encontraron transacciones.",
+                totalUsers: 0,
+                totalPages: 0,
+                page,
+                data: [],
+            });
+        }
+
         const transactions = await Transaction.aggregate([
             {
                 $group: {
@@ -30,19 +54,80 @@ const getGroupedTransactions = async (req, res) => {
                 $project: {
                     userId: "$_id",
                     transactions: 1,
-                    userDetails: { email: 1 },
+                    userDetails: { 
+                        name: 1,
+                        email: 1,
+                        totalBalance: 1,
+                        uplineCommisions: 1,
+                        wallet: 1,
+                        withdrawalWallet: 1,
+
+                    },
                 },
             },
+            { $skip: skip },
+            { $limit: limit },
         ]);
 
-        if (!transactions || transactions.length === 0) {
-            return res.status(404).json({ error: "No se encontraron transacciones." });
-        }
+        const processedData = await Promise.all(transactions.map(async (groupByUser) => {
+            const userInfo = groupByUser.userDetails[0] || null;
+            const uplineWallets = userInfo ? userInfo.uplineCommisions || [] : [];
+
+            const uplinesInfo = await Promise.all(
+                uplineWallets.map(async (wallet, index) => {
+                    const user = await User.findOne({ wallet });
+                    if (!user) return null;
+                    return {
+                        userId: user._id,
+                        email: user.email,
+                        name: user.name,
+                        level: index + 1,
+                    };
+                })
+            );
+
+            const sortedTransactions = groupByUser.transactions.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+
+            return {
+                userId: groupByUser.userId,
+                userDetails: userInfo,
+                transactions: sortedTransactions.map((tx, index) => {
+                    const amount = tx.amount.toString() || 0;
+                    const commisionsPerLevel = getCommissionsPerSaving(amount)
+
+                    return {
+                        amount,
+                        membershipAmount: index === 0 ? getMembershipAmount() : null,
+                        membershipToBusiness: index === 0 ? getMembershipToBusiness() : null,
+                        membershipToUpline: index === 0 ? getMembershipToUpline() : null,
+                        sendedCommisions: commisionsPerLevel.map((commission, index) => {
+                            const upline = uplinesInfo[index] || {};
+                            return {
+                                name: upline.name || "BUSINESS",
+                                email: upline.email || "BUSINESS",
+                                amount: commission,
+                                level: upline.level || "BUSINESS",
+                                wallet: upline.wallet || "BUSINESS",
+                            };
+                        }),
+                        date: tx.createdAt,
+                        status: tx.status,
+                        hash: tx.hash,
+                    }
+                }),
+            }
+        }));
 
         return res.status(200).json({
             message: "Transacciones agrupadas por usuario obtenidas exitosamente.",
-            data: transactions,
+            totalUsers: total,
+            totalPages,
+            page,
+            limit,
+            data: processedData,
         });
+
     } catch (error) {
         // console.error("Error al obtener transacciones agrupadas:", error);
         return res.status(500).json({ error: "Ocurrió un error en el servidor." });
@@ -141,7 +226,7 @@ const createTransaction = async (req, res) => {
 
             // si existe busca a un usuario
             const user = await User.findOne({ wallet: uplines[i] });
-            
+
             // en caso de no existir continua
             if (!user) continue;
 

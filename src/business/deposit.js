@@ -109,4 +109,4 @@ const depositSavingToBusiness = async (amount) => {
 
 };
 
-module.exports = { depositMembershipToBusiness, depositSavingToBusiness };
+module.exports = { depositMembershipToBusiness, depositSavingToBusiness, calculateNetDeposit };

@@ -1,5 +1,9 @@
 const express = require("express");
-const { createTransaction, getGroupedTransactions, getTransactionAndBalanceById } = require("../controllers/transactionController");
+const {
+  createTransaction,
+  getGroupedTransactions,
+  getTransactionAndBalanceById
+} = require("../controllers/transactionController");
 
 const router = express.Router();
 
